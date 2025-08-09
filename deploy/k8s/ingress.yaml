@@ -1,0 +1,67 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: microblogging-ingress
+  namespace: microblogging
+  annotations:
+    nginx.ingress.kubernetes.io/enable-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: microblogging.local
+    http:
+      paths:
+      # API Routes
+      - path: /api/feed/?(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: feed-service
+            port:
+              name: http
+      - path: /api/tweets/?(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: tweets-service
+            port:
+              name: http
+      - path: /api/users/?(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: users-service
+            port:
+              name: http
+      - path: /api/analytics/?(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: analytics-service
+            port:
+              name: http
+      # Documentation Routes
+      - path: /docs/?(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: docsify
+            port:
+              name: http
+      - path: /swagger/?(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: swagger-ui
+            port:
+              name: http
+      # Root path redirects to docs
+      - path: /?(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: docsify
+            port:
+              name: http

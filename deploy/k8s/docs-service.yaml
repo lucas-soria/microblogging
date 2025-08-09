@@ -1,0 +1,126 @@
+# Swagger UI Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: swagger-ui
+  namespace: microblogging
+  labels:
+    app: swagger-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: swagger-ui
+  template:
+    metadata:
+      labels:
+        app: swagger-ui
+    spec:
+      containers:
+      - name: swagger-ui
+        image: swaggerapi/swagger-ui:v5.9.0
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+
+        env:
+        - name: BASE_URL
+          value: /
+        - name: URLS
+          value: |
+            [
+              {"url":"/swagger/feed-service.yaml","name":"Feed Service"},
+              {"url":"/swagger/tweets-service.yaml","name":"Tweets Service"},
+              {"url":"/swagger/users-service.yaml","name":"Users Service"},
+              {"url":"/swagger/analytics-service.yaml","name":"Analytics Service"}
+            ]
+        volumeMounts:
+        - name: swagger-files
+          mountPath: /usr/share/nginx/html/feed-service.yaml
+          subPath: feed-service.yaml
+        - name: swagger-files
+          mountPath: /usr/share/nginx/html/tweets-service.yaml
+          subPath: tweets-service.yaml
+        - name: swagger-files
+          mountPath: /usr/share/nginx/html/users-service.yaml
+          subPath: users-service.yaml
+        - name: swagger-files
+          mountPath: /usr/share/nginx/html/analytics-service.yaml
+          subPath: analytics-service.yaml
+      volumes:
+      - name: swagger-files
+        configMap:
+          name: swagger-files
+---
+# Swagger UI Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: swagger-ui
+  namespace: microblogging
+  labels:
+    app: swagger-ui
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    name: http
+  selector:
+    app: swagger-ui
+---
+# Docsify Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docsify
+  namespace: microblogging
+  labels:
+    app: docsify
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: docsify
+  template:
+    metadata:
+      labels:
+        app: docsify
+    spec:
+      containers:
+      - name: docsify
+        image: microblogging-docsify:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+# Docsify Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: docsify
+  namespace: microblogging
+  labels:
+    app: docsify
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 3000
+    name: http
+  selector:
+    app: docsify
+  clusterIP: None

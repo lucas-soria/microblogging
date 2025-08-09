@@ -1,0 +1,45 @@
+# Users Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: users-service
+  namespace: microblogging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: users-service
+  template:
+    metadata:
+      labels:
+        app: users-service
+    spec:
+      containers:
+      - name: users-service
+        image: microblogging/users-service:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+# Users Service Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: users-service
+  namespace: microblogging
+  labels:
+    app: users-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    name: http
+  selector:
+    app: users-service

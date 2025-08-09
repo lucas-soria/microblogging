@@ -1,0 +1,45 @@
+# Tweets Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tweets-service
+  namespace: microblogging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tweets-service
+  template:
+    metadata:
+      labels:
+        app: tweets-service
+    spec:
+      containers:
+      - name: tweets-service
+        image: microblogging/tweets-service:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+# Tweets Service Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: tweets-service
+  namespace: microblogging
+  labels:
+    app: tweets-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    name: http
+  selector:
+    app: tweets-service
