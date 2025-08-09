@@ -1,0 +1,14 @@
+# Assumptions
+
+1. All users are valid, no need to create a signin module or handle sessions.
+2. Think of a solution that can scale to millions of users (e.g., 100M users).
+3. The application must be optimized for reads.
+
+## Additional assumptions
+
+### Functionalities
+
+- No processing of mentions inside tweets.
+- No processing of hashtags inside tweets.
+- Users can't interact with tweets (like, retweet, reply).
+- Users can't follow themselves.
