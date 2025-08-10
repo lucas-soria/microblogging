@@ -1,0 +1,123 @@
+openapi: 3.0.0
+info:
+  title: Feed Service API
+  description: API for managing user feeds and timelines
+  version: 1.0.0
+  contact:
+    name: Lucas Damián Soria Gava
+    url: https://github.com/lucas-soria/microblogging
+    email: lucasdsg00@gmail.com
+
+servers:
+  - url: http://localhost:8080/v1
+    description: Local development server
+  - url: https://microblogging.local/api/feed/v1
+    description: Production server
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+    
+    TimelineResponse:
+      type: object
+      required:
+        - tweets
+        - next_offset
+      properties:
+        tweets:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineTweet'
+        next_offset:
+          type: integer
+          format: int64
+          description: Offset to use for the next page of results
+    
+    TimelineTweet:
+      type: object
+      required:
+        - id
+        - handler
+        - content
+        - created_at
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the tweet
+        handler:
+          type: string
+          description: Username of the tweet author
+        content:
+          type: object
+          required:
+            - text
+          properties:
+            text:
+              type: string
+              description: The text content of the tweet
+        created_at:
+          type: string
+          format: date-time
+          description: When the tweet was created
+
+paths:
+  /timeline:
+    get:
+      summary: Get user timeline
+      description: Retrieve the timeline for the authenticated user
+      tags:
+        - Timeline
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: ID of the authenticated user
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: Number of tweets to return
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+            default: 0
+            minimum: 0
+          description: Pagination offset
+      responses:
+        '200':
+          description: A list of tweets in the user's timeline
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - Missing or invalid X-User-Id header
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

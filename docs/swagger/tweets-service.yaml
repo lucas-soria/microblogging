@@ -1,0 +1,231 @@
+openapi: 3.0.0
+info:
+  title: Tweets Service API
+  description: API for managing tweets
+  version: 1.0.0
+  contact:
+    name: Lucas Damián Soria Gava
+    url: https://github.com/lucas-soria/microblogging
+    email: lucasdsg00@gmail.com
+
+servers:
+  - url: http://localhost:8081/v1
+    description: Local development server
+  - url: https://microblogging.local/api/tweets/v1
+    description: Production server
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+    
+    Tweet:
+      type: object
+      required:
+        - id
+        - handler
+        - content
+        - created_at
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the tweet
+        handler:
+          type: string
+          description: Username of the tweet author
+        content:
+          type: object
+          required:
+            - text
+          properties:
+            text:
+              type: string
+              description: The text content of the tweet
+        created_at:
+          type: string
+          format: date-time
+          description: When the tweet was created
+    
+    TweetCreateRequest:
+      type: object
+      required:
+        - content
+        - handler
+      properties:
+        content:
+          type: object
+          required:
+            - text
+          properties:
+            text:
+              type: string
+              description: The text content of the tweet
+              minLength: 1
+              maxLength: 280
+        handler:
+          type: string
+          description: Username of the tweet author
+
+paths:
+  /tweets:
+    post:
+      summary: Create a new tweet
+      tags:
+        - Tweets
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: ID of the authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TweetCreateRequest'
+      responses:
+        '201':
+          description: Tweet created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tweet'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - Missing or invalid X-User-Id header
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tweets/{id}:
+    get:
+      summary: Get a tweet by ID
+      tags:
+        - Tweets
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: ID of the authenticated user
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the tweet to retrieve
+      responses:
+        '200':
+          description: Tweet found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tweet'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - Missing or invalid X-User-Id header
+        '404':
+          description: Tweet not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      summary: Delete a tweet
+      tags:
+        - Tweets
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: ID of the authenticated user
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the tweet to delete
+      responses:
+        '204':
+          description: Tweet deleted successfully
+        '401':
+          description: Unauthorized - Missing or invalid X-User-Id header
+        '403':
+          description: Forbidden - User doesn't own the tweet
+        '404':
+          description: Tweet not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tweets/users/{id}:
+    get:
+      summary: Get all tweets by a user
+      tags:
+        - Tweets
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: ID of the authenticated user
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the user whose tweets to retrieve
+      responses:
+        '200':
+          description: List of user's tweets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tweet'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - Missing or invalid X-User-Id header
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

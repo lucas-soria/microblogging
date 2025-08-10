@@ -1,0 +1,37 @@
+users-service:
+  port: 8082
+  timeout: 30
+
+tweets-service:
+  port: 8083
+  timeout: 30
+
+feed-service:
+  port: 8084
+  timeout: 30
+
+analytics-service:
+  port: 8085
+  timeout: 30
+
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: # TODO: use secrets for these
+  dbname: microblogging
+  sslmode: disable
+
+cache:
+  host: localhost
+  port: 6379
+  password: # TODO: use secrets for these
+  db: 0
+
+queue:
+  brokers:
+    - localhost:9092
+  group_id: microblogging-group
+  topics:
+    - TweetPosted
+    - TimelineViewed

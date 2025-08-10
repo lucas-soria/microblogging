@@ -1,0 +1,14 @@
+# Environment files
+.env
+.env.local
+
+# Configuration files
+/config/config-*.yaml
+
+# IDE specific files
+.idea/
+.vscode/
+.DS_Store
+
+# Kubernetes helper files
+/deploy/k8s/swagger-configmap.yaml

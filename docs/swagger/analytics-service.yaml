@@ -1,0 +1,180 @@
+openapi: 3.0.0
+info:
+  title: Analytics Service API
+  description: API for accessing analytics data and processing events
+  version: 1.0.0
+  contact:
+    name: Lucas Damián Soria Gava
+    url: https://github.com/lucas-soria/microblogging
+    email: lucasdsg00@gmail.com
+
+servers:
+  - url: http://localhost:8083/v1
+    description: Local development server
+  - url: https://microblogging.local/api/analytics/v1
+    description: Production server
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+    
+    # Event Schemas
+    TweetCreatedEvent:
+      type: object
+      required:
+        - id
+        - event_type
+        - user_id
+        - tweet_id
+        - timestamp
+      properties:
+        id:
+          type: string
+          description: Unique event identifier
+        event_type:
+          type: string
+          enum: [tweet_created]
+        user_id:
+          type: string
+          description: ID of the user who created the tweet
+        tweet_id:
+          type: string
+          description: ID of the created tweet
+        timestamp:
+          type: string
+          format: date-time
+          description: When the event occurred
+    
+    TimelineViewedEvent:
+      type: object
+      required:
+        - id
+        - event_type
+        - user_id
+        - timestamp
+      properties:
+        id:
+          type: string
+          description: Unique event identifier
+        event_type:
+          type: string
+          enum: [timeline_viewed]
+        user_id:
+          type: string
+          description: ID of the user who viewed the timeline
+        timestamp:
+          type: string
+          format: date-time
+          description: When the timeline was viewed
+    
+    UserAnalytics:
+      type: object
+      required:
+        - user_id
+        - is_influencer
+        - is_active
+      properties:
+        user_id:
+          type: string
+          description: ID of the user
+        is_influencer:
+          type: boolean
+          description: Whether the user is considered an influencer
+        is_active:
+          type: boolean
+          description: Whether the user is currently active
+
+paths:
+
+  /analytics/users/{id}:
+    get:
+      summary: Get user analytics
+      description: Retrieve analytics for a specific user
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the user
+      responses:
+        '200':
+          description: User analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAnalytics'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete user analytics
+      description: Delete analytics data for a specific user
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the user
+      responses:
+        '204':
+          description: User analytics data deleted successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /analytics/users:
+    get:
+      summary: Get analytics for all users
+      description: Retrieve analytics for all users
+      tags:
+        - Users
+      responses:
+        '200':
+          description: List of user analytics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserAnalytics'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
