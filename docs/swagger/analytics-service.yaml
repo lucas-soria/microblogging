@@ -31,7 +31,7 @@ components:
       required:
         - id
         - event_type
-        - user_id
+        - handler
         - tweet_id
         - timestamp
       properties:
@@ -41,7 +41,7 @@ components:
         event_type:
           type: string
           enum: [tweet_created]
-        user_id:
+        handler:
           type: string
           description: ID of the user who created the tweet
         tweet_id:
@@ -57,7 +57,7 @@ components:
       required:
         - id
         - event_type
-        - user_id
+        - handler
         - timestamp
       properties:
         id:
@@ -66,7 +66,7 @@ components:
         event_type:
           type: string
           enum: [timeline_viewed]
-        user_id:
+        handler:
           type: string
           description: ID of the user who viewed the timeline
         timestamp:
@@ -77,11 +77,11 @@ components:
     UserAnalytics:
       type: object
       required:
-        - user_id
+        - handler
         - is_influencer
         - is_active
       properties:
-        user_id:
+        handler:
           type: string
           description: ID of the user
         is_influencer:

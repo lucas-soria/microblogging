@@ -18,7 +18,7 @@
 #### Tweets
 
 - text (280 characters) -> 280 bytes.
-- user_id -> 20 bytes.
+- handler -> 20 bytes.
 - timestamp -> 25 bytes.
 - id -> 32 bytes.
 
