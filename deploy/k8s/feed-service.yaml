@@ -1,0 +1,45 @@
+# Feed Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feed-service
+  namespace: microblogging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: feed-service
+  template:
+    metadata:
+      labels:
+        app: feed-service
+    spec:
+      containers:
+      - name: feed-service
+        image: microblogging/feed-service:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+# Feed Service Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: feed-service
+  namespace: microblogging
+  labels:
+    app: feed-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    name: http
+  selector:
+    app: feed-service

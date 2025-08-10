@@ -1,0 +1,323 @@
+openapi: 3.0.0
+info:
+  title: Users Service API
+  description: API for managing users and follow relationships
+  version: 1.0.0
+  contact:
+    name: Lucas Damián Soria Gava
+    url: https://github.com/lucas-soria/microblogging
+    email: lucasdsg00@gmail.com
+
+servers:
+  - url: http://localhost:8082/v1
+    description: Local development server
+  - url: https://microblogging.local/api/users/v1
+    description: Production server
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+    
+    User:
+      type: object
+      required:
+        - handler
+        - first_name
+        - last_name
+      properties:
+        handler:
+          type: string
+          description: Unique username/handle of the user
+        first_name:
+          type: string
+          description: First name of the user
+        last_name:
+          type: string
+          description: Last name of the user
+    
+    UserCreateRequest:
+      type: object
+      required:
+        - first_name
+        - last_name
+        - handler
+      properties:
+        first_name:
+          type: string
+          description: First name of the user
+        last_name:
+          type: string
+          description: Last name of the user
+        handler:
+          type: string
+          description: Desired username/handle
+    
+    FollowRequest:
+      type: object
+      required:
+        - followee_id
+      properties:
+        followee_id:
+          type: string
+          description: ID of the user to follow/unfollow
+
+paths:
+  /users:
+    post:
+      summary: Create a new user
+      tags:
+        - Users
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: ID of the authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Handler already exists
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{id}:
+    get:
+      summary: Get user by ID
+      tags:
+        - Users
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: ID of the authenticated user
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the user to retrieve
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - Missing or invalid X-User-Id header
+        '404':
+          description: User not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      summary: Delete a user
+      tags:
+        - Users
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: ID of the authenticated user
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the user to delete
+      responses:
+        '204':
+          description: User deleted successfully
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - Missing or invalid X-User-Id header
+        '403':
+          description: Forbidden - Cannot delete another user
+        '404':
+          description: User not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{id}/follow:
+    post:
+      summary: Follow a user
+      tags:
+        - Follow
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: ID of the authenticated user
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the user who will follow (follower)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FollowRequest'
+      responses:
+        '202':
+          description: Follow request accepted
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - Missing or invalid X-User-Id header
+        '404':
+          description: User not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{id}/unfollow:
+    post:
+      summary: Unfollow a user
+      tags:
+        - Follow
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: ID of the authenticated user
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the user who will unfollow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FollowRequest'
+      responses:
+        '204':
+          description: Successfully unfollowed user
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - Missing or invalid X-User-Id header
+        '404':
+          description: User not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{id}/followees:
+    get:
+      summary: Get list of users that the specified user is following
+      tags:
+        - Follow
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: ID of the authenticated user
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the user whose followees to retrieve
+      responses:
+        '200':
+          description: List of followees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - Missing or invalid X-User-Id header
+        '404':
+          description: User not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

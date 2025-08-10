@@ -1,0 +1,45 @@
+services:
+  docsify:
+    build:
+      context: .
+      dockerfile: docs/docsify/Dockerfile
+    container_name: microblogging_docsify
+    ports:
+      - "8080:3000"
+    restart: unless-stopped
+
+  users-service:
+    build:
+      context: .
+      dockerfile: cmd/users/Dockerfile
+    container_name: microblogging_users
+    ports:
+      - "8082:8080"
+    restart: unless-stopped
+
+  tweets-service:
+    build:
+      context: .
+      dockerfile: cmd/tweets/Dockerfile
+    container_name: microblogging_tweets
+    ports:
+      - "8083:8080"
+    restart: unless-stopped
+
+  feed-service:
+    build:
+      context: .
+      dockerfile: cmd/feed/Dockerfile
+    container_name: microblogging_feed
+    ports:
+      - "8084:8080"
+    restart: unless-stopped
+
+  analytics-service:
+    build:
+      context: .
+      dockerfile: cmd/analytics/Dockerfile
+    container_name: microblogging_analytics
+    ports:
+      - "8085:8080"
+    restart: unless-stopped
