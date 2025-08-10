@@ -37,8 +37,8 @@ spec:
         #     key: key-from-configmap
         - name: POSTGRES_USER
           value: postgres
-        - name: POSTGRES_PASSWORD
-          value: postgres
+        # - name: POSTGRES_PASSWORD
+        #   value: postgres
         - name: POSTGRES_DB
           value: microblogging
         volumeMounts:

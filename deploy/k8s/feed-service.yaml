@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
       - name: feed-service
-        image: microblogging/feed-service:latest
+        image: microblogging-feed-service:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
         resources:

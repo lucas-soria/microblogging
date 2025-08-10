@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Released]
 
+### [v0.1.0](https://github.com/lucas-soria/microblogging/compare/v0.0.1...v0.0.2) (2025-08-10)
+
+#### Added
+- Initial implementation of endpoints:
+  - Feed (timeline).
+  - Users.
+  - Tweets.
+  - Analytics.
+- Auth middlewares.
+
+#### Changed
+- Documentation (fix).
+- K8S and Dockerfile (fix).
+
 ### [v0.0.1](https://github.com/lucas-soria/microblogging/compare/v0.0.0...v0.0.1) (2025-08-09) 
 
 #### Added

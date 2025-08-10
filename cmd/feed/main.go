@@ -2,22 +2,33 @@ package main
 
 import (
 	"log"
-	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/lucas-soria/microblogging/cmd/feed/handlers"
+
+	"github.com/lucas-soria/microblogging/internal/feed"
 )
 
 func main() {
-	// Initialize Gin router
-	r := gin.Default()
+	// Initialize repository
+	log.Println("Initializing feed repository")
+	feedRepo := feed.NewInMemoryFeedRepository()
 
-	// Define a simple route
-	r.GET("/", func(c *gin.Context) {
-		c.String(http.StatusOK, "hello world")
-	})
+	// Initialize service with repository
+	log.Println("Initializing feed service")
+	feedService := feed.NewService(feedRepo)
 
-	// Start the server
-	if err := r.Run(":8080"); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}
+	// Initialize handlers with service
+	log.Println("Initializing feed handlers")
+	feedHandler := handlers.NewFeedHandler(feedService)
+
+	// Create application
+	log.Println("Creating feed application")
+	application := NewApplication(feedHandler)
+
+	server := newServer()
+
+	addRoutes(server, application)
+
+	// Start server
+	server.Start()
 }

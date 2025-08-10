@@ -14,7 +14,7 @@ The Analytics Service processes events and provides insights about users activit
 {
   "id": "string",
   "event_type": "tweet_created",
-  "user_id": "string",
+  "handler": "string",
   "tweet_id": "string",
   "timestamp": "2025-08-09T05:13:41Z"
 }
@@ -29,7 +29,7 @@ The Analytics Service processes events and provides insights about users activit
 {
   "id": "string",
   "event_type": "timeline_viewed",
-  "user_id": "string",
+  "handler": "string",
   "timestamp": "2025-08-09T05:13:41Z"
 }
 ```
@@ -48,7 +48,7 @@ GET /v1/analytics/users/{id}
 **Response**
 ```json
 {
-  "user_id": "string",
+  "handler": "string",
   "is_influencer": true,
   "is_active": true,
 }
@@ -64,7 +64,7 @@ GET /v1/analytics/users
 ```json
 [
   {
-    "user_id": "string",
+    "handler": "string",
     "is_influencer": true,
     "is_active": true,
   }

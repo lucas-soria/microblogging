@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
       - name: tweets-service
-        image: microblogging/tweets-service:latest
+        image: microblogging-tweets-service:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
         resources:
