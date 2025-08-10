@@ -2,22 +2,33 @@ package main
 
 import (
 	"log"
-	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/lucas-soria/microblogging/cmd/tweets/handlers"
+
+	"github.com/lucas-soria/microblogging/internal/tweets"
 )
 
 func main() {
-	// Initialize Gin router
-	r := gin.Default()
+	// Initialize repository
+	log.Println("Initializing tweets repository")
+	tweetRepo := tweets.NewInMemoryTweetRepository()
 
-	// Define a simple route
-	r.GET("/", func(c *gin.Context) {
-		c.String(http.StatusOK, "hello world")
-	})
+	// Initialize service with repository
+	log.Println("Initializing tweets service")
+	tweetService := tweets.NewTweetService(tweetRepo)
 
-	// Start the server
-	if err := r.Run(":8080"); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}
+	// Initialize handlers with service
+	log.Println("Initializing tweets handlers")
+	tweetHandler := handlers.NewTweetHandler(tweetService)
+
+	// Create application
+	log.Println("Creating tweets application")
+	application := NewApplication(tweetHandler)
+
+	server := newServer()
+
+	addRoutes(server, application)
+
+	// Start server
+	server.Start()
 }
