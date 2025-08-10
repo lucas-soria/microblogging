@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/lucas-soria/microblogging/cmd/feed/middleware"
+
 	"github.com/lucas-soria/microblogging/internal/feed"
 
 	"github.com/gin-gonic/gin"
@@ -18,11 +20,12 @@ func TestFeedHandler_GetUserTimeline(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockRepo := feed.NewMockRepository(ctrl)
-	service := feed.NewFeedService(mockRepo)
+	service := feed.NewService(mockRepo)
 	handler := NewFeedHandler(service)
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
+	router.Use(middleware.AuthMiddleware())
 	router.GET("/v1/feed/timeline", handler.GetUserTimeline)
 
 	type args struct {

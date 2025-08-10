@@ -16,7 +16,7 @@ func TestFeedService_GetUserTimeline(t *testing.T) {
 
 	ctx := context.Background()
 	mockRepo := NewMockRepository(ctrl)
-	service := NewFeedService(mockRepo)
+	service := NewService(mockRepo)
 
 	type args struct {
 		userID string

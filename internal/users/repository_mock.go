@@ -16,32 +16,32 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockUserRepository is a mock of UserRepository interface.
-type MockUserRepository struct {
+// MockRepository is a mock of Repository interface.
+type MockRepository struct {
 	ctrl     *gomock.Controller
-	recorder *MockUserRepositoryMockRecorder
+	recorder *MockRepositoryMockRecorder
 	isgomock struct{}
 }
 
-// MockUserRepositoryMockRecorder is the mock recorder for MockUserRepository.
-type MockUserRepositoryMockRecorder struct {
-	mock *MockUserRepository
+// MockRepositoryMockRecorder is the mock recorder for MockRepository.
+type MockRepositoryMockRecorder struct {
+	mock *MockRepository
 }
 
-// NewMockUserRepository creates a new mock instance.
-func NewMockUserRepository(ctrl *gomock.Controller) *MockUserRepository {
-	mock := &MockUserRepository{ctrl: ctrl}
-	mock.recorder = &MockUserRepositoryMockRecorder{mock}
+// NewMockRepository creates a new mock instance.
+func NewMockRepository(ctrl *gomock.Controller) *MockRepository {
+	mock := &MockRepository{ctrl: ctrl}
+	mock.recorder = &MockRepositoryMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockUserRepository) EXPECT() *MockUserRepositoryMockRecorder {
+func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
 // CreateUser mocks base method.
-func (m *MockUserRepository) CreateUser(ctx context.Context, user *User) error {
+func (m *MockRepository) CreateUser(ctx context.Context, user *User) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUser", ctx, user)
 	ret0, _ := ret[0].(error)
@@ -49,13 +49,13 @@ func (m *MockUserRepository) CreateUser(ctx context.Context, user *User) error {
 }
 
 // CreateUser indicates an expected call of CreateUser.
-func (mr *MockUserRepositoryMockRecorder) CreateUser(ctx, user any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) CreateUser(ctx, user any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockUserRepository)(nil).CreateUser), ctx, user)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockRepository)(nil).CreateUser), ctx, user)
 }
 
 // DeleteUser mocks base method.
-func (m *MockUserRepository) DeleteUser(ctx context.Context, handler string) error {
+func (m *MockRepository) DeleteUser(ctx context.Context, handler string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteUser", ctx, handler)
 	ret0, _ := ret[0].(error)
@@ -63,27 +63,27 @@ func (m *MockUserRepository) DeleteUser(ctx context.Context, handler string) err
 }
 
 // DeleteUser indicates an expected call of DeleteUser.
-func (mr *MockUserRepositoryMockRecorder) DeleteUser(ctx, handler any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) DeleteUser(ctx, handler any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockUserRepository)(nil).DeleteUser), ctx, handler)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockRepository)(nil).DeleteUser), ctx, handler)
 }
 
 // FollowUser mocks base method.
-func (m *MockUserRepository) FollowUser(ctx context.Context, followRequest FollowRequest) error {
+func (m *MockRepository) FollowUser(ctx context.Context, followerHandler, followeeHandler string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FollowUser", ctx, followRequest)
+	ret := m.ctrl.Call(m, "FollowUser", ctx, followerHandler, followeeHandler)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // FollowUser indicates an expected call of FollowUser.
-func (mr *MockUserRepositoryMockRecorder) FollowUser(ctx, followRequest any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) FollowUser(ctx, followerHandler, followeeHandler any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FollowUser", reflect.TypeOf((*MockUserRepository)(nil).FollowUser), ctx, followRequest)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FollowUser", reflect.TypeOf((*MockRepository)(nil).FollowUser), ctx, followerHandler, followeeHandler)
 }
 
 // GetUser mocks base method.
-func (m *MockUserRepository) GetUser(ctx context.Context, handler string) (*User, error) {
+func (m *MockRepository) GetUser(ctx context.Context, handler string) (*User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUser", ctx, handler)
 	ret0, _ := ret[0].(*User)
@@ -92,51 +92,51 @@ func (m *MockUserRepository) GetUser(ctx context.Context, handler string) (*User
 }
 
 // GetUser indicates an expected call of GetUser.
-func (mr *MockUserRepositoryMockRecorder) GetUser(ctx, handler any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetUser(ctx, handler any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockUserRepository)(nil).GetUser), ctx, handler)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockRepository)(nil).GetUser), ctx, handler)
+}
+
+// GetUserFollowees mocks base method.
+func (m *MockRepository) GetUserFollowees(ctx context.Context, followerHandler string) ([]User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserFollowees", ctx, followerHandler)
+	ret0, _ := ret[0].([]User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserFollowees indicates an expected call of GetUserFollowees.
+func (mr *MockRepositoryMockRecorder) GetUserFollowees(ctx, followerHandler any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserFollowees", reflect.TypeOf((*MockRepository)(nil).GetUserFollowees), ctx, followerHandler)
 }
 
 // GetUserFollowers mocks base method.
-func (m *MockUserRepository) GetUserFollowers(ctx context.Context, handler string) ([]User, error) {
+func (m *MockRepository) GetUserFollowers(ctx context.Context, followeeHandler string) ([]User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserFollowers", ctx, handler)
+	ret := m.ctrl.Call(m, "GetUserFollowers", ctx, followeeHandler)
 	ret0, _ := ret[0].([]User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserFollowers indicates an expected call of GetUserFollowers.
-func (mr *MockUserRepositoryMockRecorder) GetUserFollowers(ctx, handler any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetUserFollowers(ctx, followeeHandler any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserFollowers", reflect.TypeOf((*MockUserRepository)(nil).GetUserFollowers), ctx, handler)
-}
-
-// GetUserFollowing mocks base method.
-func (m *MockUserRepository) GetUserFollowing(ctx context.Context, handler string) ([]User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserFollowing", ctx, handler)
-	ret0, _ := ret[0].([]User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUserFollowing indicates an expected call of GetUserFollowing.
-func (mr *MockUserRepositoryMockRecorder) GetUserFollowing(ctx, handler any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserFollowing", reflect.TypeOf((*MockUserRepository)(nil).GetUserFollowing), ctx, handler)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserFollowers", reflect.TypeOf((*MockRepository)(nil).GetUserFollowers), ctx, followeeHandler)
 }
 
 // UnfollowUser mocks base method.
-func (m *MockUserRepository) UnfollowUser(ctx context.Context, followRequest FollowRequest) error {
+func (m *MockRepository) UnfollowUser(ctx context.Context, followerHandler, followeeHandler string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UnfollowUser", ctx, followRequest)
+	ret := m.ctrl.Call(m, "UnfollowUser", ctx, followerHandler, followeeHandler)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UnfollowUser indicates an expected call of UnfollowUser.
-func (mr *MockUserRepositoryMockRecorder) UnfollowUser(ctx, followRequest any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) UnfollowUser(ctx, followerHandler, followeeHandler any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnfollowUser", reflect.TypeOf((*MockUserRepository)(nil).UnfollowUser), ctx, followRequest)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnfollowUser", reflect.TypeOf((*MockRepository)(nil).UnfollowUser), ctx, followerHandler, followeeHandler)
 }

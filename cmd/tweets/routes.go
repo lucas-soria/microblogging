@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+
+	"github.com/lucas-soria/microblogging/cmd/tweets/middleware"
 )
 
 // setupRoutes configures all the routes for the application
@@ -24,6 +26,7 @@ func healthCheck(router *gin.Engine) {
 }
 
 func tweetsRoutes(group *gin.RouterGroup, application *Application) {
+	group.Use(middleware.AuthMiddleware())
 	group.POST("/tweets", application.tweetHandler.CreateTweet)
 	group.GET("/tweets/:id", application.tweetHandler.GetTweet)
 	group.GET("/tweets/users/:id", application.tweetHandler.GetUserTweets)

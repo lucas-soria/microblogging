@@ -22,32 +22,29 @@ func NewFeedHandler(service feed.Service) *FeedHandler {
 }
 
 // GetUserTimeline handles GET /v1/feed/timeline
-func (h *FeedHandler) GetUserTimeline(c *gin.Context) {
-	// Get user ID from header
-	userID := c.GetHeader("X-User-Id")
-	if userID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "X-User-Id header is required"})
-		return
-	}
+func (handler *FeedHandler) GetUserTimeline(ctx *gin.Context) {
+	// Get user ID
+	user, _ := ctx.Get("user_id")
+	userID := user.(string)
 
 	// Parse query parameters
-	limit, errLimit := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	limit, errLimit := strconv.Atoi(ctx.DefaultQuery("limit", "20"))
 	if errLimit != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid limit parameter"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid limit parameter"})
 		return
 	}
-	offset, errOffset := strconv.Atoi(c.DefaultQuery("offset", "0"))
+	offset, errOffset := strconv.Atoi(ctx.DefaultQuery("offset", "0"))
 	if errOffset != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid offset parameter"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid offset parameter"})
 		return
 	}
 
 	// Get user timeline
-	timeline, err := h.service.GetUserTimeline(c.Request.Context(), userID, limit, offset)
+	timeline, err := handler.service.GetUserTimeline(ctx.Request.Context(), userID, limit, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user timeline"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user timeline"})
 		return
 	}
 
-	c.JSON(http.StatusOK, timeline)
+	ctx.JSON(http.StatusOK, timeline)
 }

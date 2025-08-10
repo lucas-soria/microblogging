@@ -14,14 +14,14 @@ var (
 	ErrHandlerExists = NewRepositoryError("handler already exists")
 )
 
-type UserRepository interface {
+type Repository interface {
 	CreateUser(ctx context.Context, user *User) error
 	GetUser(ctx context.Context, handler string) (*User, error)
 	DeleteUser(ctx context.Context, handler string) error
-	FollowUser(ctx context.Context, followRequest FollowRequest) error
-	UnfollowUser(ctx context.Context, followRequest FollowRequest) error
-	GetUserFollowers(ctx context.Context, handler string) ([]User, error)
-	GetUserFollowing(ctx context.Context, handler string) ([]User, error)
+	FollowUser(ctx context.Context, followerHandler string, followeeHandler string) error
+	UnfollowUser(ctx context.Context, followerHandler string, followeeHandler string) error
+	GetUserFollowers(ctx context.Context, followeeHandler string) ([]User, error)
+	GetUserFollowees(ctx context.Context, followerHandler string) ([]User, error)
 }
 
 type InMemoryUserRepository struct {
@@ -37,12 +37,12 @@ func NewInMemoryUserRepository() *InMemoryUserRepository {
 	}
 }
 
-func (r *InMemoryUserRepository) CreateUser(ctx context.Context, user *User) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (repository *InMemoryUserRepository) CreateUser(ctx context.Context, user *User) error {
+	repository.mu.Lock()
+	defer repository.mu.Unlock()
 
 	// Check if handler already exists
-	for _, u := range r.users {
+	for _, u := range repository.users {
 		if u.Handler == user.Handler {
 			return ErrHandlerExists
 		}
@@ -53,15 +53,15 @@ func (r *InMemoryUserRepository) CreateUser(ctx context.Context, user *User) err
 		user.Handler = uuid.New().String()
 	}
 
-	r.users[user.Handler] = user
+	repository.users[user.Handler] = user
 	return nil
 }
 
-func (r *InMemoryUserRepository) GetUser(ctx context.Context, handler string) (*User, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+func (repository *InMemoryUserRepository) GetUser(ctx context.Context, handler string) (*User, error) {
+	repository.mu.RLock()
+	defer repository.mu.RUnlock()
 
-	user, exists := r.users[handler]
+	user, exists := repository.users[handler]
 	if !exists {
 		return nil, ErrUserNotFound
 	}
@@ -71,70 +71,70 @@ func (r *InMemoryUserRepository) GetUser(ctx context.Context, handler string) (*
 	return &userCopy, nil
 }
 
-func (r *InMemoryUserRepository) DeleteUser(ctx context.Context, handler string) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (repository *InMemoryUserRepository) DeleteUser(ctx context.Context, handler string) error {
+	repository.mu.Lock()
+	defer repository.mu.Unlock()
 
-	if _, exists := r.users[handler]; !exists {
+	if _, exists := repository.users[handler]; !exists {
 		return ErrUserNotFound
 	}
 
 	// Remove user from users map
-	delete(r.users, handler)
+	delete(repository.users, handler)
 
 	// Remove user from follow relationships
-	delete(r.follow, handler) // Remove user's following relationships
-	for followerID := range r.follow {
-		delete(r.follow[followerID], handler) // Remove user from others' followers
+	delete(repository.follow, handler) // Remove user's following relationships
+	for followerID := range repository.follow {
+		delete(repository.follow[followerID], handler) // Remove user from others' followers
 	}
 
 	return nil
 }
 
-func (r *InMemoryUserRepository) FollowUser(ctx context.Context, followRequest FollowRequest) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (repository *InMemoryUserRepository) FollowUser(ctx context.Context, followerHandler string, followeeHandler string) error {
+	repository.mu.Lock()
+	defer repository.mu.Unlock()
 
 	// Check if both users exist
-	if _, exists := r.users[followRequest.FollowerHandler]; !exists {
+	if _, exists := repository.users[followerHandler]; !exists {
 		return ErrUserNotFound
 	}
-	if _, exists := r.users[followRequest.FolloweeHandler]; !exists {
+	if _, exists := repository.users[followeeHandler]; !exists {
 		return ErrUserNotFound
 	}
 
 	// Initialize follower's follow map if it doesn't exist
-	if r.follow[followRequest.FollowerHandler] == nil {
-		r.follow[followRequest.FollowerHandler] = make(map[string]bool)
+	if repository.follow[followerHandler] == nil {
+		repository.follow[followerHandler] = make(map[string]bool)
 	}
 
-	r.follow[followRequest.FollowerHandler][followRequest.FolloweeHandler] = true
+	repository.follow[followerHandler][followeeHandler] = true
 	return nil
 }
 
-func (r *InMemoryUserRepository) UnfollowUser(ctx context.Context, followRequest FollowRequest) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (repository *InMemoryUserRepository) UnfollowUser(ctx context.Context, followerHandler string, followeeHandler string) error {
+	repository.mu.Lock()
+	defer repository.mu.Unlock()
 
-	if r.follow[followRequest.FollowerHandler] != nil {
-		delete(r.follow[followRequest.FollowerHandler], followRequest.FolloweeHandler)
+	if repository.follow[followerHandler] != nil {
+		delete(repository.follow[followerHandler], followeeHandler)
 	}
 	return nil
 }
 
-func (r *InMemoryUserRepository) GetUserFollowers(ctx context.Context, handler string) ([]User, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+func (repository *InMemoryUserRepository) GetUserFollowers(ctx context.Context, handler string) ([]User, error) {
+	repository.mu.RLock()
+	defer repository.mu.RUnlock()
 
 	// Check if user exists
-	if _, exists := r.users[handler]; !exists {
+	if _, exists := repository.users[handler]; !exists {
 		return nil, ErrUserNotFound
 	}
 
 	var followers []User
-	for followerID, followees := range r.follow {
+	for followerID, followees := range repository.follow {
 		if followees[handler] {
-			if user, exists := r.users[followerID]; exists {
+			if user, exists := repository.users[followerID]; exists {
 				followers = append(followers, *user)
 			}
 		}
@@ -143,18 +143,18 @@ func (r *InMemoryUserRepository) GetUserFollowers(ctx context.Context, handler s
 	return followers, nil
 }
 
-func (r *InMemoryUserRepository) GetUserFollowing(ctx context.Context, handler string) ([]User, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+func (repository *InMemoryUserRepository) GetUserFollowees(ctx context.Context, handler string) ([]User, error) {
+	repository.mu.RLock()
+	defer repository.mu.RUnlock()
 
 	// Check if user exists
-	if _, exists := r.users[handler]; !exists {
+	if _, exists := repository.users[handler]; !exists {
 		return nil, ErrUserNotFound
 	}
 
 	var following []User
-	for followeeID := range r.follow[handler] {
-		if user, exists := r.users[followeeID]; exists {
+	for followeeID := range repository.follow[handler] {
+		if user, exists := repository.users[followeeID]; exists {
 			following = append(following, *user)
 		}
 	}

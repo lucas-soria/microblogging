@@ -12,19 +12,19 @@ type Service interface {
 	GetUserTimeline(ctx context.Context, userID string, limit, offset int) (*TimelineResponse, error)
 }
 
-type feedService struct {
-	repo Repository
+type service struct {
+	repository Repository
 }
 
-// NewFeedService creates a new feed service
-func NewFeedService(repo Repository) Service {
-	return &feedService{
-		repo: repo,
+// NewService creates a new feed service
+func NewService(repository Repository) Service {
+	return &service{
+		repository: repository,
 	}
 }
 
 // GetUserTimeline retrieves the timeline for a user
-func (s *feedService) GetUserTimeline(ctx context.Context, userID string, limit, offset int) (*TimelineResponse, error) {
+func (service *service) GetUserTimeline(ctx context.Context, userID string, limit, offset int) (*TimelineResponse, error) {
 	if userID == "" {
 		return nil, errors.New("user ID is required")
 	}
@@ -37,7 +37,7 @@ func (s *feedService) GetUserTimeline(ctx context.Context, userID string, limit,
 		offset = 0
 	}
 
-	tweets, err := s.repo.GetUserTimeline(ctx, userID, limit, offset)
+	tweets, err := service.repository.GetUserTimeline(ctx, userID, limit, offset)
 	if err != nil {
 		return nil, err
 	}

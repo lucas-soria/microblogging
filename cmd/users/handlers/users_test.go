@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/lucas-soria/microblogging/cmd/users/middleware"
+
 	"github.com/lucas-soria/microblogging/internal/users"
 
 	"github.com/gin-gonic/gin"
@@ -21,8 +23,8 @@ func TestCreateUser(t *testing.T) {
 
 	ctx := context.Background()
 
-	mockRepo := users.NewMockUserRepository(ctrl)
-	service := users.NewUserService(mockRepo)
+	mockRepo := users.NewMockRepository(ctrl)
+	service := users.NewService(mockRepo)
 	handler := NewUserHandler(service)
 
 	gin.SetMode(gin.TestMode)
@@ -67,12 +69,12 @@ func TestCreateUser(t *testing.T) {
 		{
 			name: "Invalid request body",
 			args: args{
-				body: []byte(`{"handler":"","first_name":"Test","last_name":"User"}`),
+				body: []byte(`{"handler":"","first_name":"Test",}`),
 			},
 			expectations: func(args args) {},
 			want: want{
 				statusCode: http.StatusBadRequest,
-				response:   []byte(`{"error":"Key: 'createUserRequest.Handler' Error:Field validation for 'Handler' failed on the 'required' tag"}`),
+				response:   []byte(`{"error":"Invalid request body"}`),
 			},
 		},
 		{
@@ -114,8 +116,8 @@ func TestGetUser(t *testing.T) {
 
 	ctx := context.Background()
 
-	mockRepo := users.NewMockUserRepository(ctrl)
-	service := users.NewUserService(mockRepo)
+	mockRepo := users.NewMockRepository(ctrl)
+	service := users.NewService(mockRepo)
 	handler := NewUserHandler(service)
 
 	gin.SetMode(gin.TestMode)
@@ -182,6 +184,7 @@ func TestGetUser(t *testing.T) {
 
 			url := fmt.Sprintf("/v1/users/%s", tc.args.userID)
 			r := httptest.NewRequest(http.MethodGet, url, nil)
+
 			w := httptest.NewRecorder()
 
 			router.ServeHTTP(w, r)
@@ -198,12 +201,13 @@ func TestDeleteUser(t *testing.T) {
 
 	ctx := context.Background()
 
-	mockRepo := users.NewMockUserRepository(ctrl)
-	service := users.NewUserService(mockRepo)
+	mockRepo := users.NewMockRepository(ctrl)
+	service := users.NewService(mockRepo)
 	handler := NewUserHandler(service)
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
+	router.Use(middleware.AuthMiddleware())
 	router.DELETE("/v1/users/:id", handler.DeleteUser)
 
 	type args struct {
@@ -260,6 +264,7 @@ func TestDeleteUser(t *testing.T) {
 
 			url := fmt.Sprintf("/v1/users/%s", tc.args.userID)
 			r := httptest.NewRequest(http.MethodDelete, url, nil)
+			r.Header.Set("X-User-Id", tc.args.userID)
 			w := httptest.NewRecorder()
 
 			router.ServeHTTP(w, r)
@@ -276,12 +281,13 @@ func TestFollowUser(t *testing.T) {
 
 	ctx := context.Background()
 
-	mockRepo := users.NewMockUserRepository(ctrl)
-	service := users.NewUserService(mockRepo)
+	mockRepo := users.NewMockRepository(ctrl)
+	service := users.NewService(mockRepo)
 	handler := NewUserHandler(service)
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
+	router.Use(middleware.AuthMiddleware())
 	router.POST("/v1/users/:id/follow", handler.FollowUser)
 
 	type args struct {
@@ -310,10 +316,7 @@ func TestFollowUser(t *testing.T) {
 			},
 			expectations: func(args args) {
 				mockRepo.EXPECT().
-					FollowUser(ctx, users.FollowRequest{
-						FollowerHandler: "user1",
-						FolloweeHandler: "user2",
-					}).
+					FollowUser(ctx, "user1", "user2").
 					Return(nil).
 					Times(1)
 			},
@@ -331,7 +334,7 @@ func TestFollowUser(t *testing.T) {
 			expectations: func(args args) {},
 			want: want{
 				statusCode: http.StatusUnauthorized,
-				response:   []byte(`{"error":"authentication required"}`),
+				response:   []byte(`{"error":"X-User-Id header is required"}`),
 			},
 		},
 		{
@@ -344,10 +347,7 @@ func TestFollowUser(t *testing.T) {
 			},
 			expectations: func(args args) {
 				mockRepo.EXPECT().
-					FollowUser(ctx, users.FollowRequest{
-						FollowerHandler: "user1",
-						FolloweeHandler: "nonexistent",
-					}).
+					FollowUser(ctx, "user1", "nonexistent").
 					Return(users.ErrUserNotFound).
 					Times(1)
 			},

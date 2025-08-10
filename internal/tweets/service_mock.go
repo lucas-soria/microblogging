@@ -41,7 +41,7 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 }
 
 // CreateTweet mocks base method.
-func (m *MockService) CreateTweet(ctx context.Context, req *CreateTweetRequest) (*Tweet, error) {
+func (m *MockService) CreateTweet(ctx context.Context, req *Tweet) (*Tweet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateTweet", ctx, req)
 	ret0, _ := ret[0].(*Tweet)

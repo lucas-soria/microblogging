@@ -16,32 +16,32 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockUserService is a mock of UserService interface.
-type MockUserService struct {
+// MockService is a mock of Service interface.
+type MockService struct {
 	ctrl     *gomock.Controller
-	recorder *MockUserServiceMockRecorder
+	recorder *MockServiceMockRecorder
 	isgomock struct{}
 }
 
-// MockUserServiceMockRecorder is the mock recorder for MockUserService.
-type MockUserServiceMockRecorder struct {
-	mock *MockUserService
+// MockServiceMockRecorder is the mock recorder for MockService.
+type MockServiceMockRecorder struct {
+	mock *MockService
 }
 
-// NewMockUserService creates a new mock instance.
-func NewMockUserService(ctrl *gomock.Controller) *MockUserService {
-	mock := &MockUserService{ctrl: ctrl}
-	mock.recorder = &MockUserServiceMockRecorder{mock}
+// NewMockService creates a new mock instance.
+func NewMockService(ctrl *gomock.Controller) *MockService {
+	mock := &MockService{ctrl: ctrl}
+	mock.recorder = &MockServiceMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockUserService) EXPECT() *MockUserServiceMockRecorder {
+func (m *MockService) EXPECT() *MockServiceMockRecorder {
 	return m.recorder
 }
 
 // CreateUser mocks base method.
-func (m *MockUserService) CreateUser(ctx context.Context, user *User) (*User, error) {
+func (m *MockService) CreateUser(ctx context.Context, user *User) (*User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUser", ctx, user)
 	ret0, _ := ret[0].(*User)
@@ -50,13 +50,13 @@ func (m *MockUserService) CreateUser(ctx context.Context, user *User) (*User, er
 }
 
 // CreateUser indicates an expected call of CreateUser.
-func (mr *MockUserServiceMockRecorder) CreateUser(ctx, user any) *gomock.Call {
+func (mr *MockServiceMockRecorder) CreateUser(ctx, user any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockUserService)(nil).CreateUser), ctx, user)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockService)(nil).CreateUser), ctx, user)
 }
 
 // DeleteUser mocks base method.
-func (m *MockUserService) DeleteUser(ctx context.Context, id string) error {
+func (m *MockService) DeleteUser(ctx context.Context, id string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteUser", ctx, id)
 	ret0, _ := ret[0].(error)
@@ -64,27 +64,27 @@ func (m *MockUserService) DeleteUser(ctx context.Context, id string) error {
 }
 
 // DeleteUser indicates an expected call of DeleteUser.
-func (mr *MockUserServiceMockRecorder) DeleteUser(ctx, id any) *gomock.Call {
+func (mr *MockServiceMockRecorder) DeleteUser(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockUserService)(nil).DeleteUser), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockService)(nil).DeleteUser), ctx, id)
 }
 
 // FollowUser mocks base method.
-func (m *MockUserService) FollowUser(ctx context.Context, req FollowRequest) error {
+func (m *MockService) FollowUser(ctx context.Context, followerHandler, followeeHandler string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FollowUser", ctx, req)
+	ret := m.ctrl.Call(m, "FollowUser", ctx, followerHandler, followeeHandler)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // FollowUser indicates an expected call of FollowUser.
-func (mr *MockUserServiceMockRecorder) FollowUser(ctx, req any) *gomock.Call {
+func (mr *MockServiceMockRecorder) FollowUser(ctx, followerHandler, followeeHandler any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FollowUser", reflect.TypeOf((*MockUserService)(nil).FollowUser), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FollowUser", reflect.TypeOf((*MockService)(nil).FollowUser), ctx, followerHandler, followeeHandler)
 }
 
 // GetUser mocks base method.
-func (m *MockUserService) GetUser(ctx context.Context, id string) (*User, error) {
+func (m *MockService) GetUser(ctx context.Context, id string) (*User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUser", ctx, id)
 	ret0, _ := ret[0].(*User)
@@ -93,51 +93,51 @@ func (m *MockUserService) GetUser(ctx context.Context, id string) (*User, error)
 }
 
 // GetUser indicates an expected call of GetUser.
-func (mr *MockUserServiceMockRecorder) GetUser(ctx, id any) *gomock.Call {
+func (mr *MockServiceMockRecorder) GetUser(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockUserService)(nil).GetUser), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockService)(nil).GetUser), ctx, id)
 }
 
 // GetUserFollowees mocks base method.
-func (m *MockUserService) GetUserFollowees(ctx context.Context, userID string) ([]User, error) {
+func (m *MockService) GetUserFollowees(ctx context.Context, followerHandler string) ([]User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserFollowees", ctx, userID)
+	ret := m.ctrl.Call(m, "GetUserFollowees", ctx, followerHandler)
 	ret0, _ := ret[0].([]User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserFollowees indicates an expected call of GetUserFollowees.
-func (mr *MockUserServiceMockRecorder) GetUserFollowees(ctx, userID any) *gomock.Call {
+func (mr *MockServiceMockRecorder) GetUserFollowees(ctx, followerHandler any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserFollowees", reflect.TypeOf((*MockUserService)(nil).GetUserFollowees), ctx, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserFollowees", reflect.TypeOf((*MockService)(nil).GetUserFollowees), ctx, followerHandler)
 }
 
 // GetUserFollowers mocks base method.
-func (m *MockUserService) GetUserFollowers(ctx context.Context, userID string) ([]User, error) {
+func (m *MockService) GetUserFollowers(ctx context.Context, followeeHandler string) ([]User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserFollowers", ctx, userID)
+	ret := m.ctrl.Call(m, "GetUserFollowers", ctx, followeeHandler)
 	ret0, _ := ret[0].([]User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserFollowers indicates an expected call of GetUserFollowers.
-func (mr *MockUserServiceMockRecorder) GetUserFollowers(ctx, userID any) *gomock.Call {
+func (mr *MockServiceMockRecorder) GetUserFollowers(ctx, followeeHandler any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserFollowers", reflect.TypeOf((*MockUserService)(nil).GetUserFollowers), ctx, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserFollowers", reflect.TypeOf((*MockService)(nil).GetUserFollowers), ctx, followeeHandler)
 }
 
 // UnfollowUser mocks base method.
-func (m *MockUserService) UnfollowUser(ctx context.Context, req FollowRequest) error {
+func (m *MockService) UnfollowUser(ctx context.Context, followerHandler, followeeHandler string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UnfollowUser", ctx, req)
+	ret := m.ctrl.Call(m, "UnfollowUser", ctx, followerHandler, followeeHandler)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UnfollowUser indicates an expected call of UnfollowUser.
-func (mr *MockUserServiceMockRecorder) UnfollowUser(ctx, req any) *gomock.Call {
+func (mr *MockServiceMockRecorder) UnfollowUser(ctx, followerHandler, followeeHandler any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnfollowUser", reflect.TypeOf((*MockUserService)(nil).UnfollowUser), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnfollowUser", reflect.TypeOf((*MockService)(nil).UnfollowUser), ctx, followerHandler, followeeHandler)
 }

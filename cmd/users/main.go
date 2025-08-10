@@ -15,7 +15,7 @@ func main() {
 
 	// Initialize service with repository
 	log.Println("Initializing users service")
-	userService := users.NewUserService(userRepo)
+	userService := users.NewService(userRepo)
 
 	// Initialize handlers with service
 	log.Println("Initializing users handlers")

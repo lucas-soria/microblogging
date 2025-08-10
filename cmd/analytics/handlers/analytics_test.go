@@ -20,7 +20,7 @@ func TestGetUserAnalytics(t *testing.T) {
 	defer ctrl.Finish()
 
 	repoMock := analytics.NewMockRepository(ctrl)
-	service := analytics.NewAnalyticsService(repoMock)
+	service := analytics.NewService(repoMock)
 	handler := NewAnalyticsHandler(service)
 
 	gin.SetMode(gin.TestMode)
@@ -92,7 +92,7 @@ func TestGetAllUserAnalytics(t *testing.T) {
 	defer ctrl.Finish()
 
 	repoMock := analytics.NewMockRepository(ctrl)
-	service := analytics.NewAnalyticsService(repoMock)
+	service := analytics.NewService(repoMock)
 	handler := NewAnalyticsHandler(service)
 
 	gin.SetMode(gin.TestMode)
@@ -169,7 +169,7 @@ func TestDeleteUserAnalytics(t *testing.T) {
 	defer ctrl.Finish()
 
 	repoMock := analytics.NewMockRepository(ctrl)
-	service := analytics.NewAnalyticsService(repoMock)
+	service := analytics.NewService(repoMock)
 	handler := NewAnalyticsHandler(service)
 
 	gin.SetMode(gin.TestMode)

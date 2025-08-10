@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/lucas-soria/microblogging/cmd/users/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,9 +28,12 @@ func healthCheck(router *gin.Engine) {
 func usersRoutes(group *gin.RouterGroup, application *Application) {
 	group.POST("/users", application.userHandler.CreateUser)
 	group.GET("/users/:id", application.userHandler.GetUser)
-	group.DELETE("/users/:id", application.userHandler.DeleteUser)
-	group.POST("/users/:id/follow", application.userHandler.FollowUser)
-	group.POST("/users/:id/unfollow", application.userHandler.UnfollowUser)
 	group.GET("/users/:id/followers", application.userHandler.GetUserFollowers)
-	group.GET("/users/:id/following", application.userHandler.GetUserFollowing)
+	group.GET("/users/:id/followees", application.userHandler.GetUserFollowees)
+
+	protectedGroup := group.Group("")
+	protectedGroup.Use(middleware.AuthMiddleware())
+	protectedGroup.DELETE("/users/:id", application.userHandler.DeleteUser)
+	protectedGroup.POST("/users/:id/follow", application.userHandler.FollowUser)
+	protectedGroup.POST("/users/:id/unfollow", application.userHandler.UnfollowUser)
 }

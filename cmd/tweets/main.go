@@ -15,7 +15,7 @@ func main() {
 
 	// Initialize service with repository
 	log.Println("Initializing tweets service")
-	tweetService := tweets.NewTweetService(tweetRepo)
+	tweetService := tweets.NewService(tweetRepo)
 
 	// Initialize handlers with service
 	log.Println("Initializing tweets handlers")

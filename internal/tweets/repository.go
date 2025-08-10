@@ -28,31 +28,31 @@ func NewInMemoryTweetRepository() *InMemoryTweetRepository {
 	}
 }
 
-func (r *InMemoryTweetRepository) Create(ctx context.Context, tweet *Tweet) (*Tweet, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (repository *InMemoryTweetRepository) Create(ctx context.Context, tweet *Tweet) (*Tweet, error) {
+	repository.mu.Lock()
+	defer repository.mu.Unlock()
 
-	r.tweets[tweet.ID] = tweet
+	repository.tweets[tweet.ID] = tweet
 	return tweet, nil
 }
 
-func (r *InMemoryTweetRepository) GetByID(ctx context.Context, id string) (*Tweet, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+func (repository *InMemoryTweetRepository) GetByID(ctx context.Context, id string) (*Tweet, error) {
+	repository.mu.RLock()
+	defer repository.mu.RUnlock()
 
-	tweet, exists := r.tweets[id]
+	tweet, exists := repository.tweets[id]
 	if !exists {
 		return nil, nil
 	}
 	return tweet, nil
 }
 
-func (r *InMemoryTweetRepository) GetByUserID(ctx context.Context, userID string) ([]*Tweet, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+func (repository *InMemoryTweetRepository) GetByUserID(ctx context.Context, userID string) ([]*Tweet, error) {
+	repository.mu.RLock()
+	defer repository.mu.RUnlock()
 
 	var userTweets []*Tweet
-	for _, tweet := range r.tweets {
+	for _, tweet := range repository.tweets {
 		if tweet.Handler == userID {
 			userTweets = append(userTweets, tweet)
 		}
@@ -60,10 +60,10 @@ func (r *InMemoryTweetRepository) GetByUserID(ctx context.Context, userID string
 	return userTweets, nil
 }
 
-func (r *InMemoryTweetRepository) Delete(ctx context.Context, id string) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (repository *InMemoryTweetRepository) Delete(ctx context.Context, id string) error {
+	repository.mu.Lock()
+	defer repository.mu.Unlock()
 
-	delete(r.tweets, id)
+	delete(repository.tweets, id)
 	return nil
 }

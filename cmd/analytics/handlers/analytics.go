@@ -27,13 +27,13 @@ type GetUserAnalyticsResponse struct {
 }
 
 // GetUserAnalytics handles GET /v1/analytics/users/:id
-func (h *AnalyticsHandler) GetUserAnalytics(c *gin.Context) {
-	userID := c.Param("id")
+func (handler *AnalyticsHandler) GetUserAnalytics(ctx *gin.Context) {
+	userID := ctx.Param("id")
 
 	// Call service
-	analytics, err := h.service.GetUserAnalytics(c.Request.Context(), userID)
+	analytics, err := handler.service.GetUserAnalytics(ctx.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -44,13 +44,13 @@ func (h *AnalyticsHandler) GetUserAnalytics(c *gin.Context) {
 		IsActive:     analytics.IsActive,
 	}
 
-	c.JSON(http.StatusOK, response)
+	ctx.JSON(http.StatusOK, response)
 }
 
 // GetAllUserAnalytics handles GET /v1/analytics/users
-func (h *AnalyticsHandler) GetAllUserAnalytics(c *gin.Context) {
+func (handler *AnalyticsHandler) GetAllUserAnalytics(c *gin.Context) {
 	// Call service
-	analyticsList, err := h.service.GetAllUserAnalytics(c.Request.Context())
+	analyticsList, err := handler.service.GetAllUserAnalytics(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user analytics"})
 		return
@@ -70,15 +70,15 @@ func (h *AnalyticsHandler) GetAllUserAnalytics(c *gin.Context) {
 }
 
 // DeleteUserAnalytics handles DELETE /v1/analytics/users/:id
-func (h *AnalyticsHandler) DeleteUserAnalytics(c *gin.Context) {
-	userID := c.Param("id")
+func (handler *AnalyticsHandler) DeleteUserAnalytics(ctx *gin.Context) {
+	userID := ctx.Param("id")
 
 	// Call service
-	err := h.service.DeleteUserAnalytics(c.Request.Context(), userID)
+	err := handler.service.DeleteUserAnalytics(ctx.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	ctx.Status(http.StatusNoContent)
 }

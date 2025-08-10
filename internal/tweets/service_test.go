@@ -16,10 +16,10 @@ func TestTweetService_CreateTweet(t *testing.T) {
 
 	ctx := context.Background()
 	mockRepo := NewMockRepository(ctrl)
-	service := NewTweetService(mockRepo)
+	service := NewService(mockRepo)
 
 	type args struct {
-		req *CreateTweetRequest
+		req *Tweet
 	}
 
 	type want struct {
@@ -37,7 +37,7 @@ func TestTweetService_CreateTweet(t *testing.T) {
 		{
 			name: "successful tweet creation",
 			args: args{
-				req: &CreateTweetRequest{
+				req: &Tweet{
 					Handler: "testuser",
 					Content: Content{Text: "Hello, world!"},
 				},
@@ -65,7 +65,7 @@ func TestTweetService_CreateTweet(t *testing.T) {
 		{
 			name: "empty content",
 			args: args{
-				req: &CreateTweetRequest{
+				req: &Tweet{
 					Handler: "testuser",
 					Content: Content{Text: ""},
 				},
@@ -102,7 +102,7 @@ func TestTweetService_GetTweet(t *testing.T) {
 
 	ctx := context.Background()
 	mockRepo := NewMockRepository(ctrl)
-	service := NewTweetService(mockRepo)
+	service := NewService(mockRepo)
 
 	type want struct {
 		tweet *Tweet
@@ -173,7 +173,7 @@ func TestTweetService_GetUserTweets(t *testing.T) {
 
 	ctx := context.Background()
 	mockRepo := NewMockRepository(ctrl)
-	service := NewTweetService(mockRepo)
+	service := NewService(mockRepo)
 
 	type want struct {
 		tweets []*Tweet
@@ -238,7 +238,7 @@ func TestTweetService_DeleteTweet(t *testing.T) {
 
 	ctx := context.Background()
 	mockRepo := NewMockRepository(ctrl)
-	service := NewTweetService(mockRepo)
+	service := NewService(mockRepo)
 
 	type want struct {
 		err error

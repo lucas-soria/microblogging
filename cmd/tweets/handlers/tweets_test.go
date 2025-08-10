@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lucas-soria/microblogging/cmd/users/middleware"
+
 	"github.com/lucas-soria/microblogging/internal/tweets"
 
 	"github.com/gin-gonic/gin"
@@ -23,11 +25,12 @@ func TestGetTweet(t *testing.T) {
 	ctx := context.Background()
 
 	mockRepo := tweets.NewMockRepository(ctrl)
-	service := tweets.NewTweetService(mockRepo)
+	service := tweets.NewService(mockRepo)
 	handler := NewTweetHandler(service)
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
+	router.Use(middleware.AuthMiddleware())
 	router.GET("/v1/tweets/:id", handler.GetTweet)
 
 	now := time.Now().UTC()
@@ -133,11 +136,12 @@ func TestGetUserTweets(t *testing.T) {
 	ctx := context.Background()
 
 	mockRepo := tweets.NewMockRepository(ctrl)
-	service := tweets.NewTweetService(mockRepo)
+	service := tweets.NewService(mockRepo)
 	handler := NewTweetHandler(service)
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
+	router.Use(middleware.AuthMiddleware())
 	router.GET("/v1/tweets/users/:id", handler.GetUserTweets)
 
 	now := time.Now().UTC()
@@ -254,11 +258,12 @@ func TestDeleteTweet(t *testing.T) {
 	ctx := context.Background()
 
 	mockRepo := tweets.NewMockRepository(ctrl)
-	service := tweets.NewTweetService(mockRepo)
+	service := tweets.NewService(mockRepo)
 	handler := NewTweetHandler(service)
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
+	router.Use(middleware.AuthMiddleware())
 	router.DELETE("/v1/tweets/:id", handler.DeleteTweet)
 
 	now := time.Now().UTC()
@@ -392,11 +397,12 @@ func TestCreateTweet(t *testing.T) {
 	ctx := context.Background()
 
 	mockRepo := tweets.NewMockRepository(ctrl)
-	service := tweets.NewTweetService(mockRepo)
+	service := tweets.NewService(mockRepo)
 	handler := NewTweetHandler(service)
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
+	router.Use(middleware.AuthMiddleware())
 	router.POST("/v1/tweets", handler.CreateTweet)
 
 	now := time.Now().UTC()
@@ -479,8 +485,8 @@ func TestCreateTweet(t *testing.T) {
 			},
 			expectations: func(args args) {},
 			want: want{
-				statusCode: http.StatusInternalServerError,
-				tweet:      []byte(`{"error":"Failed to create tweet"}`),
+				statusCode: http.StatusBadRequest,
+				tweet:      []byte(`{"error":"Invalid request body"}`),
 			},
 		},
 	}

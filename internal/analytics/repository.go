@@ -39,11 +39,11 @@ func NewInMemoryRepository() *InMemoryRepository {
 }
 
 // GetUserAnalytics retrieves analytics for a specific user
-func (r *InMemoryRepository) GetUserAnalytics(ctx context.Context, userID string) (*UserAnalytics, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+func (repository *InMemoryRepository) GetUserAnalytics(ctx context.Context, userID string) (*UserAnalytics, error) {
+	repository.mu.RLock()
+	defer repository.mu.RUnlock()
 
-	analytics, exists := r.analytics[userID]
+	analytics, exists := repository.analytics[userID]
 	if !exists {
 		return nil, errors.New("user analytics not found")
 	}
@@ -54,12 +54,12 @@ func (r *InMemoryRepository) GetUserAnalytics(ctx context.Context, userID string
 }
 
 // GetAllUserAnalytics retrieves analytics for all users
-func (r *InMemoryRepository) GetAllUserAnalytics(ctx context.Context) ([]*UserAnalytics, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+func (repository *InMemoryRepository) GetAllUserAnalytics(ctx context.Context) ([]*UserAnalytics, error) {
+	repository.mu.RLock()
+	defer repository.mu.RUnlock()
 
-	result := make([]*UserAnalytics, 0, len(r.analytics))
-	for _, analytics := range r.analytics {
+	result := make([]*UserAnalytics, 0, len(repository.analytics))
+	for _, analytics := range repository.analytics {
 		// Create a copy to prevent external modifications
 		analyticsCopy := *analytics
 		result = append(result, &analyticsCopy)
@@ -69,31 +69,31 @@ func (r *InMemoryRepository) GetAllUserAnalytics(ctx context.Context) ([]*UserAn
 }
 
 // DeleteUserAnalytics deletes analytics data for a specific user
-func (r *InMemoryRepository) DeleteUserAnalytics(ctx context.Context, userID string) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (repository *InMemoryRepository) DeleteUserAnalytics(ctx context.Context, userID string) error {
+	repository.mu.Lock()
+	defer repository.mu.Unlock()
 
-	if _, exists := r.analytics[userID]; !exists {
+	if _, exists := repository.analytics[userID]; !exists {
 		return errors.New("user analytics not found")
 	}
 
-	delete(r.analytics, userID)
+	delete(repository.analytics, userID)
 	return nil
 }
 
 // ProcessEvent processes an analytics event
-func (r *InMemoryRepository) ProcessEvent(ctx context.Context, event *Event) error {
-	r.eventsMu.Lock()
-	r.events = append(r.events, event)
-	r.eventsMu.Unlock()
+func (repository *InMemoryRepository) ProcessEvent(ctx context.Context, event *Event) error {
+	repository.eventsMu.Lock()
+	repository.events = append(repository.events, event)
+	repository.eventsMu.Unlock()
 
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	repository.mu.Lock()
+	defer repository.mu.Unlock()
 
 	now := time.Now()
 
 	// Get or create user analytics
-	analytics, exists := r.analytics[event.Handler]
+	analytics, exists := repository.analytics[event.Handler]
 	if !exists {
 		analytics = &UserAnalytics{
 			Handler:   event.Handler,
@@ -109,13 +109,13 @@ func (r *InMemoryRepository) ProcessEvent(ctx context.Context, event *Event) err
 		// If user has created many tweets, they might be an influencer
 		// This is a simple heuristic - in a real app, we'd have more sophisticated logic
 		tweetCount := 0
-		r.eventsMu.RLock()
-		for _, e := range r.events {
+		repository.eventsMu.RLock()
+		for _, e := range repository.events {
 			if e.Handler == event.Handler && e.EventType == "tweet_created" {
 				tweetCount++
 			}
 		}
-		r.eventsMu.RUnlock()
+		repository.eventsMu.RUnlock()
 
 		if tweetCount > 100 { // Arbitrary threshold for demo
 			analytics.IsInfluencer = true
@@ -127,7 +127,7 @@ func (r *InMemoryRepository) ProcessEvent(ctx context.Context, event *Event) err
 	}
 
 	analytics.UpdatedAt = now
-	r.analytics[event.Handler] = analytics
+	repository.analytics[event.Handler] = analytics
 
 	return nil
 }

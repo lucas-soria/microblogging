@@ -14,8 +14,8 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	ctx := context.Background()
 
-	mockRepo := NewMockUserRepository(ctrl)
-	service := NewUserService(mockRepo)
+	mockRepo := NewMockRepository(ctrl)
+	service := NewService(mockRepo)
 
 	user := &User{
 		Handler:   "testuser",
@@ -75,8 +75,8 @@ func TestUserService_GetUser(t *testing.T) {
 
 	ctx := context.Background()
 
-	mockRepo := NewMockUserRepository(ctrl)
-	service := NewUserService(mockRepo)
+	mockRepo := NewMockRepository(ctrl)
+	service := NewService(mockRepo)
 
 	user := &User{
 		Handler:   "testuser",
@@ -136,8 +136,8 @@ func TestUserService_DeleteUser(t *testing.T) {
 
 	ctx := context.Background()
 
-	mockRepo := NewMockUserRepository(ctrl)
-	service := NewUserService(mockRepo)
+	mockRepo := NewMockRepository(ctrl)
+	service := NewService(mockRepo)
 
 	userID := "testid"
 
@@ -190,13 +190,11 @@ func TestUserService_FollowUser(t *testing.T) {
 
 	ctx := context.Background()
 
-	mockRepo := NewMockUserRepository(ctrl)
-	service := NewUserService(mockRepo)
+	mockRepo := NewMockRepository(ctrl)
+	service := NewService(mockRepo)
 
-	req := FollowRequest{
-		FollowerHandler: "follower1",
-		FolloweeHandler: "followee1",
-	}
+	follower := "follower1"
+	followee := "followee1"
 
 	type want struct {
 		err error
@@ -210,7 +208,7 @@ func TestUserService_FollowUser(t *testing.T) {
 		{
 			name: "successful follow",
 			expectations: func() {
-				mockRepo.EXPECT().FollowUser(ctx, req).
+				mockRepo.EXPECT().FollowUser(ctx, follower, followee).
 					Return(nil).
 					Times(1)
 			},
@@ -221,7 +219,7 @@ func TestUserService_FollowUser(t *testing.T) {
 		{
 			name: "failed follow - user not found",
 			expectations: func() {
-				mockRepo.EXPECT().FollowUser(ctx, req).
+				mockRepo.EXPECT().FollowUser(ctx, follower, followee).
 					Return(ErrUserNotFound).
 					Times(1)
 			},
@@ -235,7 +233,7 @@ func TestUserService_FollowUser(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.expectations()
 
-			err := service.FollowUser(ctx, req)
+			err := service.FollowUser(ctx, follower, followee)
 			assert.Equal(t, tc.want.err, err)
 		})
 	}
@@ -247,13 +245,11 @@ func TestUserService_UnfollowUser(t *testing.T) {
 
 	ctx := context.Background()
 
-	mockRepo := NewMockUserRepository(ctrl)
-	service := NewUserService(mockRepo)
+	mockRepo := NewMockRepository(ctrl)
+	service := NewService(mockRepo)
 
-	req := FollowRequest{
-		FollowerHandler: "follower1",
-		FolloweeHandler: "followee1",
-	}
+	follower := "follower1"
+	followee := "followee1"
 
 	type want struct {
 		err error
@@ -267,7 +263,7 @@ func TestUserService_UnfollowUser(t *testing.T) {
 		{
 			name: "successful unfollow",
 			expectations: func() {
-				mockRepo.EXPECT().UnfollowUser(ctx, req).
+				mockRepo.EXPECT().UnfollowUser(ctx, follower, followee).
 					Return(nil).
 					Times(1)
 			},
@@ -278,7 +274,7 @@ func TestUserService_UnfollowUser(t *testing.T) {
 		{
 			name: "failed unfollow - not following",
 			expectations: func() {
-				mockRepo.EXPECT().UnfollowUser(ctx, req).
+				mockRepo.EXPECT().UnfollowUser(ctx, follower, followee).
 					Return(ErrUserNotFound).
 					Times(1)
 			},
@@ -292,7 +288,7 @@ func TestUserService_UnfollowUser(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.expectations()
 
-			err := service.UnfollowUser(ctx, req)
+			err := service.UnfollowUser(ctx, follower, followee)
 			assert.Equal(t, tc.want.err, err)
 		})
 	}
@@ -304,8 +300,8 @@ func TestUserService_GetUserFollowers(t *testing.T) {
 
 	ctx := context.Background()
 
-	mockRepo := NewMockUserRepository(ctrl)
-	service := NewUserService(mockRepo)
+	mockRepo := NewMockRepository(ctrl)
+	service := NewService(mockRepo)
 
 	userID := "testuser"
 	followers := []User{
@@ -366,8 +362,8 @@ func TestUserService_GetUserFollowees(t *testing.T) {
 
 	ctx := context.Background()
 
-	mockRepo := NewMockUserRepository(ctrl)
-	service := NewUserService(mockRepo)
+	mockRepo := NewMockRepository(ctrl)
+	service := NewService(mockRepo)
 
 	userID := "testuser"
 	followees := []User{
@@ -388,7 +384,7 @@ func TestUserService_GetUserFollowees(t *testing.T) {
 		{
 			name: "successful get followees",
 			expectations: func() {
-				mockRepo.EXPECT().GetUserFollowing(ctx, userID).
+				mockRepo.EXPECT().GetUserFollowees(ctx, userID).
 					Return(followees, nil).
 					Times(1)
 			},
@@ -400,7 +396,7 @@ func TestUserService_GetUserFollowees(t *testing.T) {
 		{
 			name: "no followees found",
 			expectations: func() {
-				mockRepo.EXPECT().GetUserFollowing(ctx, userID).
+				mockRepo.EXPECT().GetUserFollowees(ctx, userID).
 					Return(nil, nil).
 					Times(1)
 			},

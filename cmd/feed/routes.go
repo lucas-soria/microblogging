@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/lucas-soria/microblogging/cmd/feed/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,5 +26,6 @@ func healthCheck(router *gin.Engine) {
 }
 
 func feedRoutes(group *gin.RouterGroup, application *Application) {
+	group.Use(middleware.AuthMiddleware())
 	group.GET("/feed/timeline", application.feedHandler.GetUserTimeline)
 }

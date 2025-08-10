@@ -18,42 +18,42 @@ type Service interface {
 	ProcessEvent(ctx context.Context, event *Event) error
 }
 
-type analyticsService struct {
-	repo Repository
+type service struct {
+	repository Repository
 }
 
-// NewAnalyticsService creates a new analytics service
-func NewAnalyticsService(repo Repository) Service {
-	return &analyticsService{
-		repo: repo,
+// NewService creates a new analytics service
+func NewService(repository Repository) Service {
+	return &service{
+		repository: repository,
 	}
 }
 
 // GetUserAnalytics retrieves analytics for a specific user
-func (s *analyticsService) GetUserAnalytics(ctx context.Context, userID string) (*UserAnalytics, error) {
+func (service *service) GetUserAnalytics(ctx context.Context, userID string) (*UserAnalytics, error) {
 	if userID == "" {
 		return nil, errors.New("user ID is required")
 	}
 
-	return s.repo.GetUserAnalytics(ctx, userID)
+	return service.repository.GetUserAnalytics(ctx, userID)
 }
 
 // GetAllUserAnalytics retrieves analytics for all users
-func (s *analyticsService) GetAllUserAnalytics(ctx context.Context) ([]*UserAnalytics, error) {
-	return s.repo.GetAllUserAnalytics(ctx)
+func (service *service) GetAllUserAnalytics(ctx context.Context) ([]*UserAnalytics, error) {
+	return service.repository.GetAllUserAnalytics(ctx)
 }
 
 // DeleteUserAnalytics deletes analytics data for a specific user
-func (s *analyticsService) DeleteUserAnalytics(ctx context.Context, userID string) error {
+func (service *service) DeleteUserAnalytics(ctx context.Context, userID string) error {
 	if userID == "" {
 		return errors.New("user ID is required")
 	}
 
-	return s.repo.DeleteUserAnalytics(ctx, userID)
+	return service.repository.DeleteUserAnalytics(ctx, userID)
 }
 
 // ProcessEvent processes an analytics event
-func (s *analyticsService) ProcessEvent(ctx context.Context, event *Event) error {
+func (service *service) ProcessEvent(ctx context.Context, event *Event) error {
 	if event == nil {
 		return errors.New("event cannot be nil")
 	}
@@ -66,5 +66,5 @@ func (s *analyticsService) ProcessEvent(ctx context.Context, event *Event) error
 		return errors.New("event type is required")
 	}
 
-	return s.repo.ProcessEvent(ctx, event)
+	return service.repository.ProcessEvent(ctx, event)
 }

@@ -17,7 +17,7 @@ func TestGetUserAnalytics(t *testing.T) {
 	defer ctrl.Finish()
 
 	repoMock := NewMockRepository(ctrl)
-	service := NewAnalyticsService(repoMock)
+	service := NewService(repoMock)
 
 	type want struct {
 		err       error
@@ -95,7 +95,7 @@ func TestGetAllUserAnalytics(t *testing.T) {
 	defer ctrl.Finish()
 
 	repoMock := NewMockRepository(ctrl)
-	service := NewAnalyticsService(repoMock)
+	service := NewService(repoMock)
 
 	type want struct {
 		analytics []*UserAnalytics
@@ -155,7 +155,7 @@ func TestDeleteUserAnalytics(t *testing.T) {
 	defer ctrl.Finish()
 
 	repoMock := NewMockRepository(ctrl)
-	service := NewAnalyticsService(repoMock)
+	service := NewService(repoMock)
 
 	type want struct {
 		err error
@@ -201,7 +201,7 @@ func TestProcessEvent(t *testing.T) {
 	defer ctrl.Finish()
 
 	repoMock := NewMockRepository(ctrl)
-	service := NewAnalyticsService(repoMock)
+	service := NewService(repoMock)
 
 	now := time.Now()
 	validEvent := &Event{

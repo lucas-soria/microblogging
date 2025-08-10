@@ -12,61 +12,57 @@ import (
 
 // Service defines the business logic for tweet operations
 type Service interface {
-	CreateTweet(ctx context.Context, req *CreateTweetRequest) (*Tweet, error)
+	CreateTweet(ctx context.Context, tweetToCreate *Tweet) (*Tweet, error)
 	GetTweet(ctx context.Context, id string) (*Tweet, error)
 	GetUserTweets(ctx context.Context, userID string) ([]*Tweet, error)
 	DeleteTweet(ctx context.Context, id string) error
 }
 
-type tweetService struct {
-	repo Repository
+type service struct {
+	repository Repository
 }
 
-// NewTweetService creates a new tweet service
-func NewTweetService(repo Repository) Service {
-	return &tweetService{
-		repo: repo,
+// NewService creates a new tweet service
+func NewService(repository Repository) Service {
+	return &service{
+		repository: repository,
 	}
 }
 
-func (s *tweetService) CreateTweet(ctx context.Context, req *CreateTweetRequest) (*Tweet, error) {
-	if req.Content.Text == "" {
+func (service *service) CreateTweet(ctx context.Context, tweetToCreate *Tweet) (*Tweet, error) {
+	if tweetToCreate.Content.Text == "" {
 		return nil, errors.New("tweet content cannot be empty")
 	}
 
-	tweet := &Tweet{
-		ID:        uuid.New().String(),
-		Handler:   req.Handler,
-		Content:   req.Content,
-		CreatedAt: time.Now().UTC(),
-	}
+	tweetToCreate.ID = uuid.New().String()
+	tweetToCreate.CreatedAt = time.Now().UTC()
 
-	return s.repo.Create(ctx, tweet)
+	return service.repository.Create(ctx, tweetToCreate)
 }
 
-func (s *tweetService) GetTweet(ctx context.Context, id string) (*Tweet, error) {
+func (service *service) GetTweet(ctx context.Context, id string) (*Tweet, error) {
 	if id == "" {
 		return nil, errors.New("tweet ID cannot be empty")
 	}
 
-	return s.repo.GetByID(ctx, id)
+	return service.repository.GetByID(ctx, id)
 }
 
-func (s *tweetService) GetUserTweets(ctx context.Context, userID string) ([]*Tweet, error) {
+func (service *service) GetUserTweets(ctx context.Context, userID string) ([]*Tweet, error) {
 	if userID == "" {
 		return nil, errors.New("user ID cannot be empty")
 	}
 
-	return s.repo.GetByUserID(ctx, userID)
+	return service.repository.GetByUserID(ctx, userID)
 }
 
-func (s *tweetService) DeleteTweet(ctx context.Context, id string) error {
+func (service *service) DeleteTweet(ctx context.Context, id string) error {
 	if id == "" {
 		return errors.New("tweet ID cannot be empty")
 	}
 
 	// Check if tweet exists
-	foundTweet, err := s.repo.GetByID(ctx, id)
+	foundTweet, err := service.repository.GetByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -75,5 +71,5 @@ func (s *tweetService) DeleteTweet(ctx context.Context, id string) error {
 		return errors.New("tweet not found")
 	}
 
-	return s.repo.Delete(ctx, id)
+	return service.repository.Delete(ctx, id)
 }

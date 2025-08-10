@@ -14,9 +14,3 @@ type Tweet struct {
 type Content struct {
 	Text string `json:"text"`
 }
-
-// CreateTweetRequest represents the request to create a new tweet
-type CreateTweetRequest struct {
-	Content Content `json:"content" binding:"required"`
-	Handler string  `json:"handler"`
-}

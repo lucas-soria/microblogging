@@ -27,11 +27,11 @@ func NewInMemoryFeedRepository() *InMemoryFeedRepository {
 }
 
 // GetUserTimeline retrieves the timeline for a user with pagination
-func (r *InMemoryFeedRepository) GetUserTimeline(ctx context.Context, userID string, limit, offset int) ([]*Tweet, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+func (repository *InMemoryFeedRepository) GetUserTimeline(ctx context.Context, userID string, limit, offset int) ([]*Tweet, error) {
+	repository.mu.RLock()
+	defer repository.mu.RUnlock()
 
-	timeline, exists := r.tweets[userID]
+	timeline, exists := repository.tweets[userID]
 	if !exists {
 		return []*Tweet{}, nil
 	}
@@ -59,9 +59,9 @@ func (r *InMemoryFeedRepository) GetUserTimeline(ctx context.Context, userID str
 }
 
 // AddTweet adds a tweet to the feed of followers (helper method for testing)
-func (r *InMemoryFeedRepository) AddTweet(userID string, tweet *Tweet) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (repository *InMemoryFeedRepository) AddTweet(userID string, tweet *Tweet) {
+	repository.mu.Lock()
+	defer repository.mu.Unlock()
 
-	r.tweets[userID] = append(r.tweets[userID], tweet)
+	repository.tweets[userID] = append(repository.tweets[userID], tweet)
 }

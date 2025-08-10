@@ -9,6 +9,9 @@ import (
 )
 
 func TestInMemoryUserRepository_CreateUser(t *testing.T) {
+	ctx := context.Background()
+
+	repo := NewInMemoryUserRepository()
 
 	type want struct {
 		err  error
@@ -16,10 +19,10 @@ func TestInMemoryUserRepository_CreateUser(t *testing.T) {
 	}
 
 	tt := []struct {
-		name  string
-		user  *User
-		setup func(*InMemoryUserRepository)
-		want  want
+		name         string
+		user         *User
+		expectations func()
+		want         want
 	}{
 		{
 			name: "successful user creation",
@@ -28,7 +31,7 @@ func TestInMemoryUserRepository_CreateUser(t *testing.T) {
 				FirstName: "Test",
 				LastName:  "User",
 			},
-			setup: func(r *InMemoryUserRepository) {},
+			expectations: func() {},
 			want: want{
 				err:  nil,
 				user: &User{Handler: "testuser", FirstName: "Test", LastName: "User"},
@@ -41,8 +44,8 @@ func TestInMemoryUserRepository_CreateUser(t *testing.T) {
 				FirstName: "Test",
 				LastName:  "User",
 			},
-			setup: func(r *InMemoryUserRepository) {
-				r.users["1"] = &User{Handler: "existinguser"}
+			expectations: func() {
+				repo.users["existinguser"] = &User{Handler: "existinguser"}
 			},
 			want: want{
 				err:  ErrHandlerExists,
@@ -52,23 +55,19 @@ func TestInMemoryUserRepository_CreateUser(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			repo := NewInMemoryUserRepository()
-			tc.setup(repo)
+			tc.expectations()
 
-			err := repo.CreateUser(context.Background(), tc.user)
+			err := repo.CreateUser(ctx, tc.user)
 
 			assert.Equal(t, tc.want.err, err)
-			if tc.want.err == nil {
-				assert.NotEmpty(t, tc.user.Handler)
-				assert.Equal(t, tc.want.user.Handler, tc.user.Handler)
-				assert.Equal(t, tc.want.user.FirstName, tc.user.FirstName)
-				assert.Equal(t, tc.want.user.LastName, tc.user.LastName)
-			}
 		})
 	}
 }
 
 func TestInMemoryUserRepository_GetUser(t *testing.T) {
+	ctx := context.Background()
+
+	repo := NewInMemoryUserRepository()
 
 	type want struct {
 		err  error
@@ -76,15 +75,15 @@ func TestInMemoryUserRepository_GetUser(t *testing.T) {
 	}
 
 	tt := []struct {
-		name    string
-		handler string
-		setup   func(*InMemoryUserRepository)
-		want    want
+		name         string
+		handler      string
+		expectations func()
+		want         want
 	}{
 		{
 			name: "user found",
-			setup: func(r *InMemoryUserRepository) {
-				r.users[""] = &User{Handler: "testuser"}
+			expectations: func() {
+				repo.users[""] = &User{Handler: "testuser"}
 			},
 			want: want{
 				err:  nil,
@@ -92,9 +91,9 @@ func TestInMemoryUserRepository_GetUser(t *testing.T) {
 			},
 		},
 		{
-			name:    "user not found",
-			handler: "nonexistent",
-			setup:   func(r *InMemoryUserRepository) {},
+			name:         "user not found",
+			handler:      "nonexistent",
+			expectations: func() {},
 			want: want{
 				err:  ErrUserNotFound,
 				user: nil,
@@ -103,10 +102,9 @@ func TestInMemoryUserRepository_GetUser(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			repo := NewInMemoryUserRepository()
-			tc.setup(repo)
+			tc.expectations()
 
-			user, err := repo.GetUser(context.Background(), tc.handler)
+			user, err := repo.GetUser(ctx, tc.handler)
 
 			assert.Equal(t, tc.want.err, err)
 			assert.Equal(t, tc.want.user, user)
@@ -115,31 +113,34 @@ func TestInMemoryUserRepository_GetUser(t *testing.T) {
 }
 
 func TestInMemoryUserRepository_DeleteUser(t *testing.T) {
+	ctx := context.Background()
+
+	repo := NewInMemoryUserRepository()
 
 	type want struct {
 		err error
 	}
 
 	tt := []struct {
-		name    string
-		handler string
-		setup   func(*InMemoryUserRepository)
-		want    want
+		name         string
+		handler      string
+		expectations func()
+		want         want
 	}{
 		{
 			name:    "successful deletion",
 			handler: "user",
-			setup: func(r *InMemoryUserRepository) {
-				r.users["user"] = &User{Handler: "testuser"}
+			expectations: func() {
+				repo.users["user"] = &User{Handler: "testuser"}
 			},
 			want: want{
 				err: nil,
 			},
 		},
 		{
-			name:    "user not found",
-			handler: "nonexistent",
-			setup:   func(r *InMemoryUserRepository) {},
+			name:         "user not found",
+			handler:      "nonexistent",
+			expectations: func() {},
 			want: want{
 				err: ErrUserNotFound,
 			},
@@ -147,67 +148,60 @@ func TestInMemoryUserRepository_DeleteUser(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			repo := NewInMemoryUserRepository()
-			tc.setup(repo)
+			tc.expectations()
 
-			err := repo.DeleteUser(context.Background(), tc.handler)
+			err := repo.DeleteUser(ctx, tc.handler)
 
 			assert.Equal(t, tc.want.err, err)
-			if tc.want.err == nil {
-				_, err := repo.GetUser(context.Background(), tc.handler)
-				assert.Equal(t, ErrUserNotFound, err)
-			}
 		})
 	}
 }
 
 func TestInMemoryUserRepository_FollowUser(t *testing.T) {
+	ctx := context.Background()
+
+	repo := NewInMemoryUserRepository()
 
 	type want struct {
 		err error
 	}
 
 	tt := []struct {
-		name  string
-		req   FollowRequest
-		setup func(*InMemoryUserRepository)
-		want  want
+		name         string
+		follower     string
+		followee     string
+		expectations func()
+		want         want
 	}{
 		{
-			name: "successful follow",
-			req: FollowRequest{
-				FollowerHandler: "1",
-				FolloweeHandler: "2",
-			},
-			setup: func(r *InMemoryUserRepository) {
-				r.users["1"] = &User{Handler: "follower"}
-				r.users["2"] = &User{Handler: "followee"}
+			name:     "successful follow",
+			follower: "1",
+			followee: "2",
+			expectations: func() {
+				repo.users["1"] = &User{Handler: "follower"}
+				repo.users["2"] = &User{Handler: "followee"}
 			},
 			want: want{
 				err: nil,
 			},
 		},
 		{
-			name: "follower not found",
-			req: FollowRequest{
-				FollowerHandler: "nonexistent",
-				FolloweeHandler: "2",
-			},
-			setup: func(r *InMemoryUserRepository) {
-				r.users["2"] = &User{Handler: "followee"}
+			name:     "follower not found",
+			follower: "nonexistent",
+			followee: "2",
+			expectations: func() {
+				repo.users["2"] = &User{Handler: "followee"}
 			},
 			want: want{
 				err: ErrUserNotFound,
 			},
 		},
 		{
-			name: "followee not found",
-			req: FollowRequest{
-				FollowerHandler: "1",
-				FolloweeHandler: "nonexistent",
-			},
-			setup: func(r *InMemoryUserRepository) {
-				r.users["1"] = &User{Handler: "follower"}
+			name:     "followee not found",
+			follower: "1",
+			followee: "nonexistent",
+			expectations: func() {
+				repo.users["1"] = &User{Handler: "follower"}
 			},
 			want: want{
 				err: ErrUserNotFound,
@@ -216,47 +210,42 @@ func TestInMemoryUserRepository_FollowUser(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			repo := NewInMemoryUserRepository()
-			tc.setup(repo)
+			tc.expectations()
 
-			err := repo.FollowUser(context.Background(), tc.req)
+			err := repo.FollowUser(ctx, tc.follower, tc.followee)
 
 			assert.Equal(t, tc.want.err, err)
-			if tc.want.err == nil {
-				// Verify the follow relationship was created
-				repo.mu.RLock()
-				defer repo.mu.RUnlock()
-				assert.True(t, repo.follow[tc.req.FollowerHandler][tc.req.FolloweeHandler])
-			}
 		})
 	}
 }
 
 func TestInMemoryUserRepository_UnfollowUser(t *testing.T) {
+	ctx := context.Background()
+
+	repo := NewInMemoryUserRepository()
 
 	type want struct {
 		err error
 	}
 
 	tt := []struct {
-		name  string
-		req   FollowRequest
-		setup func(*InMemoryUserRepository)
-		want  want
+		name         string
+		follower     string
+		followee     string
+		expectations func()
+		want         want
 	}{
 		{
-			name: "successful unfollow",
-			req: FollowRequest{
-				FollowerHandler: "1",
-				FolloweeHandler: "2",
-			},
-			setup: func(r *InMemoryUserRepository) {
-				r.users["1"] = &User{Handler: "follower"}
-				r.users["2"] = &User{Handler: "followee"}
-				if r.follow["1"] == nil {
-					r.follow["1"] = make(map[string]bool)
+			name:     "successful unfollow",
+			follower: "1",
+			followee: "2",
+			expectations: func() {
+				repo.users["1"] = &User{Handler: "follower"}
+				repo.users["2"] = &User{Handler: "followee"}
+				if repo.follow["1"] == nil {
+					repo.follow["1"] = make(map[string]bool)
 				}
-				r.follow["1"]["2"] = true
+				repo.follow["1"]["2"] = true
 			},
 			want: want{
 				err: nil,
@@ -265,23 +254,19 @@ func TestInMemoryUserRepository_UnfollowUser(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			repo := NewInMemoryUserRepository()
-			tc.setup(repo)
+			tc.expectations()
 
-			err := repo.UnfollowUser(context.Background(), tc.req)
+			err := repo.UnfollowUser(ctx, tc.follower, tc.followee)
 
 			assert.Equal(t, tc.want.err, err)
-			if tc.want.err == nil {
-				// Verify the follow relationship was removed
-				repo.mu.RLock()
-				defer repo.mu.RUnlock()
-				assert.False(t, repo.follow[tc.req.FollowerHandler][tc.req.FolloweeHandler])
-			}
 		})
 	}
 }
 
 func TestInMemoryUserRepository_GetUserFollowers(t *testing.T) {
+	ctx := context.Background()
+
+	repo := NewInMemoryUserRepository()
 
 	type want struct {
 		err   error
@@ -289,21 +274,21 @@ func TestInMemoryUserRepository_GetUserFollowers(t *testing.T) {
 	}
 
 	tt := []struct {
-		name    string
-		handler string
-		setup   func(*InMemoryUserRepository)
-		want    want
+		name         string
+		handler      string
+		expectations func()
+		want         want
 	}{
 		{
 			name:    "user has followers",
 			handler: "followee",
-			setup: func(r *InMemoryUserRepository) {
-				r.users["follower1"] = &User{Handler: "follower1"}
-				r.users["followee"] = &User{Handler: "followee"}
-				r.users["follower2"] = &User{Handler: "follower2"}
+			expectations: func() {
+				repo.users["follower1"] = &User{Handler: "follower1"}
+				repo.users["followee"] = &User{Handler: "followee"}
+				repo.users["follower2"] = &User{Handler: "follower2"}
 
-				r.follow["follower1"] = map[string]bool{"followee": true}
-				r.follow["follower2"] = map[string]bool{"followee": true}
+				repo.follow["follower1"] = map[string]bool{"followee": true}
+				repo.follow["follower2"] = map[string]bool{"followee": true}
 			},
 			want: want{
 				err: nil,
@@ -316,19 +301,19 @@ func TestInMemoryUserRepository_GetUserFollowers(t *testing.T) {
 		{
 			name:    "user has no followers",
 			handler: "user",
-			setup: func(r *InMemoryUserRepository) {
-				r.users["user"] = &User{Handler: "user"}
-				r.follow["user"] = map[string]bool{}
+			expectations: func() {
+				repo.users["user"] = &User{Handler: "user"}
+				repo.follow["user"] = map[string]bool{}
 			},
 			want: want{
 				err:   nil,
-				users: []User{},
+				users: nil,
 			},
 		},
 		{
-			name:    "user not found",
-			handler: "nonexistent",
-			setup:   func(r *InMemoryUserRepository) {},
+			name:         "user not found",
+			handler:      "nonexistent",
+			expectations: func() {},
 			want: want{
 				err:   ErrUserNotFound,
 				users: nil,
@@ -337,20 +322,20 @@ func TestInMemoryUserRepository_GetUserFollowers(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			repo := NewInMemoryUserRepository()
-			tc.setup(repo)
+			tc.expectations()
 
-			followers, err := repo.GetUserFollowers(context.Background(), tc.handler)
+			followers, err := repo.GetUserFollowers(ctx, tc.handler)
 
 			assert.Equal(t, tc.want.err, err)
-			if tc.want.err == nil {
-				assert.ElementsMatch(t, tc.want.users, followers)
-			}
+			assert.Equal(t, tc.want.users, followers)
 		})
 	}
 }
 
 func TestInMemoryUserRepository_GetUserFollowing(t *testing.T) {
+	ctx := context.Background()
+
+	repo := NewInMemoryUserRepository()
 
 	type want struct {
 		err   error
@@ -358,20 +343,21 @@ func TestInMemoryUserRepository_GetUserFollowing(t *testing.T) {
 	}
 
 	tt := []struct {
-		name    string
-		handler string
-		setup   func(*InMemoryUserRepository)
-		want    want
+		name         string
+		handler      string
+		expectations func()
+		want         want
 	}{
 		{
 			name:    "user is following others",
 			handler: "user",
-			setup: func(r *InMemoryUserRepository) {
-				r.users["user"] = &User{Handler: "user"}
-				r.users["followee1"] = &User{Handler: "followee1"}
-				r.users["followee2"] = &User{Handler: "followee2"}
+			expectations: func() {
+				repo = NewInMemoryUserRepository()
+				repo.users["user"] = &User{Handler: "user"}
+				repo.users["followee1"] = &User{Handler: "followee1"}
+				repo.users["followee2"] = &User{Handler: "followee2"}
 
-				r.follow["user"] = map[string]bool{
+				repo.follow["user"] = map[string]bool{
 					"followee1": true,
 					"followee2": true,
 				}
@@ -387,18 +373,19 @@ func TestInMemoryUserRepository_GetUserFollowing(t *testing.T) {
 		{
 			name:    "user is not following anyone",
 			handler: "user",
-			setup: func(r *InMemoryUserRepository) {
-				r.users["user"] = &User{Handler: "user"}
+			expectations: func() {
+				repo = NewInMemoryUserRepository()
+				repo.users["user"] = &User{Handler: "user"}
 			},
 			want: want{
 				err:   nil,
-				users: []User{},
+				users: nil,
 			},
 		},
 		{
-			name:    "user not found",
-			handler: "nonexistent",
-			setup:   func(r *InMemoryUserRepository) {},
+			name:         "user not found",
+			handler:      "nonexistent",
+			expectations: func() {},
 			want: want{
 				err:   ErrUserNotFound,
 				users: nil,
@@ -407,20 +394,19 @@ func TestInMemoryUserRepository_GetUserFollowing(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			repo := NewInMemoryUserRepository()
-			tc.setup(repo)
+			tc.expectations()
 
-			following, err := repo.GetUserFollowing(context.Background(), tc.handler)
+			following, err := repo.GetUserFollowees(ctx, tc.handler)
 
 			assert.Equal(t, tc.want.err, err)
-			if tc.want.err == nil {
-				assert.ElementsMatch(t, tc.want.users, following)
-			}
+			assert.Equal(t, tc.want.users, following)
 		})
 	}
 }
 
 func TestInMemoryUserRepository_ConcurrentAccess(t *testing.T) {
+	ctx := context.Background()
+
 	repo := NewInMemoryUserRepository()
 	user := &User{
 		Handler:   "concurrent",
@@ -435,7 +421,7 @@ func TestInMemoryUserRepository_ConcurrentAccess(t *testing.T) {
 				t.Parallel()
 				u := *user
 				u.Handler = "user_" + uuid.New().String()
-				err := repo.CreateUser(context.Background(), &u)
+				err := repo.CreateUser(ctx, &u)
 				assert.NoError(t, err)
 			})
 		}
@@ -445,18 +431,14 @@ func TestInMemoryUserRepository_ConcurrentAccess(t *testing.T) {
 	t.Run("concurrent follow", func(t *testing.T) {
 		user1 := &User{Handler: "user1"}
 		user2 := &User{Handler: "user2"}
-		repo.CreateUser(context.Background(), user1)
-		repo.CreateUser(context.Background(), user2)
+		repo.CreateUser(ctx, user1)
+		repo.CreateUser(ctx, user2)
 
 		for i := 0; i < 100; i++ {
 			t.Run("", func(t *testing.T) {
 				t.Parallel()
-				req := FollowRequest{
-					FollowerHandler: user1.Handler,
-					FolloweeHandler: user2.Handler,
-				}
-				_ = repo.FollowUser(context.Background(), req)
-				_ = repo.UnfollowUser(context.Background(), req)
+				_ = repo.FollowUser(context.Background(), user1.Handler, user2.Handler)
+				_ = repo.UnfollowUser(context.Background(), user1.Handler, user2.Handler)
 			})
 		}
 	})

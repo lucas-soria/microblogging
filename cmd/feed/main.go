@@ -15,7 +15,7 @@ func main() {
 
 	// Initialize service with repository
 	log.Println("Initializing feed service")
-	feedService := feed.NewFeedService(feedRepo)
+	feedService := feed.NewService(feedRepo)
 
 	// Initialize handlers with service
 	log.Println("Initializing feed handlers")
