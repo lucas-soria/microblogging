@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/lucas-soria/microblogging/internal/users"
 
@@ -77,18 +78,29 @@ func (handler *UserHandler) DeleteUser(ctx *gin.Context) {
 
 // FollowUser handles POST /v1/users/:id/follow
 func (handler *UserHandler) FollowUser(ctx *gin.Context) {
+	// Get followee ID from URL path parameter
 	followeeID := ctx.Param("id")
 	if followeeID == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "user ID is required"})
 		return
 	}
 
-	// In a real app, you would get the follower ID from the authentication context
-	// For now, we'll use a header
+	// Get follower ID from context (set by auth middleware)
 	followerID, _ := ctx.Get("user_id")
 	followerIDString := followerID.(string)
 
+	// Prevent users from following themselves
+	if followerIDString == followeeID {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "cannot follow yourself"})
+		return
+	}
+
+	// Perform the follow action
 	if err := handler.service.FollowUser(ctx.Request.Context(), followerIDString, followeeID); err != nil {
+		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+			ctx.JSON(http.StatusConflict, gin.H{"error": "already following this user"})
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to follow user"})
 		return
 	}

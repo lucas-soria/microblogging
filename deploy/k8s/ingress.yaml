@@ -1,67 +1,80 @@
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: k8s.nginx.org/v1
+kind: VirtualServer
 metadata:
-  name: microblogging-ingress
+  name: microblogging-virtualserver
   namespace: microblogging
-  annotations:
-    nginx.ingress.kubernetes.io/enable-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
-  ingressClassName: nginx
-  rules:
-  - host: microblogging.local
-    http:
-      paths:
-      # API Routes
-      - path: /api/feed/?(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: feed-service
-            port:
-              name: http
-      - path: /api/tweets/?(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: tweets-service
-            port:
-              name: http
-      - path: /api/users/?(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: users-service
-            port:
-              name: http
-      - path: /api/analytics/?(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: analytics-service
-            port:
-              name: http
-      # Documentation Routes
-      - path: /docs/?(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: docsify
-            port:
-              name: http
-      - path: /swagger/?(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: swagger-ui
-            port:
-              name: http
-      # Root path redirects to docs
-      - path: /?(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: docsify
-            port:
-              name: http
+  host: microblogging.local
+  upstreams:
+  - name: tweets-read
+    service: tweets-read-service
+    port: 80
+  - name: tweets-write
+    service: tweets-write-service
+    port: 80
+  - name: feed
+    service: feed-service
+    port: 80
+  - name: users
+    service: users-service
+    port: 80
+  - name: analytics
+    service: analytics-service
+    port: 80
+  - name: docsify
+    service: docsify
+    port: 80
+  - name: swagger-ui
+    service: swagger-ui
+    port: 80
+  routes:
+  - path: /api/tweets/
+    matches:
+      - conditions:
+          - variable: $request_method
+            value: "~^(POST|PUT|DELETE)$"
+        action:
+          proxy:
+            upstream: tweets-write
+            rewritePath: /
+      - conditions:
+          - variable: $request_method
+            value: GET
+        action:
+          proxy:
+            upstream: tweets-read
+            rewritePath: /
+    action:
+      proxy:
+        upstream: tweets-read
+        rewritePath: /
+  - path: /api/feed/
+    action:
+      proxy:
+        upstream: feed
+        rewritePath: /      
+  - path: /api/users/
+    action:
+      proxy:
+        upstream: users
+        rewritePath: /
+  - path: /api/analytics/
+    action:
+      proxy:
+        upstream: analytics
+        rewritePath: /
+  - path: /docs/
+    action:
+      proxy:
+        upstream: docsify
+        rewritePath: /
+  - path: /swagger/
+    action:
+      proxy:
+        upstream: swagger-ui
+        rewritePath: /
+  - path: /
+    action:
+      proxy:
+        upstream: docsify
+        rewritePath: /
