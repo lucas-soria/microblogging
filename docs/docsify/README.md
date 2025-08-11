@@ -1,5 +1,7 @@
 # Microblogging API Documentation
 
+> Note: I couldn't finish the implementation of the tweet delivery algorithm. But this documentation explains what I wanted to do. Specially the [architecture](architecture.md) section, it explains the tweet delivery algorithm.
+
 Welcome to the Microblogging API documentation. This documentation provides detailed information about the API endpoints, request/response formats, and examples.
 
 ## Objectives
@@ -30,4 +32,3 @@ Explore the API documentation for each service:
 ## Assumptions
 
 - [Assumptions](assumptions.md)
-
