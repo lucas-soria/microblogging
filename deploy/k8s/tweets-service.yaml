@@ -1,25 +1,57 @@
-# Tweets Service Deployment
+# Tweets Write Service Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tweets-service
+  name: tweets-write-service
   namespace: microblogging
+  labels:
+    app: tweets-write-service
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: tweets-service
+      app: tweets-write-service
   template:
     metadata:
       labels:
-        app: tweets-service
+        app: tweets-write-service
     spec:
       containers:
-      - name: tweets-service
+      - name: tweets-write-service
         image: microblogging-tweets-service:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
+        env:
+        - name: GIN_MODE
+          value: "release"
+        - name: APP_MODE
+          value: "write"
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: DB_HOST_WRITE
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: DB_NAME
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: password
         resources:
           requests:
             memory: "128Mi"
@@ -28,14 +60,76 @@ spec:
             memory: "256Mi"
             cpu: "200m"
 ---
-# Tweets Service Service
+# Tweets Read Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tweets-read-service
+  namespace: microblogging
+  labels:
+    app: tweets-read-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tweets-read-service
+  template:
+    metadata:
+      labels:
+        app: tweets-read-service
+    spec:
+      containers:
+      - name: tweets-read-service
+        image: microblogging-tweets-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: GIN_MODE
+          value: "release"
+        - name: APP_MODE
+          value: "read"
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: DB_HOST_WRITE
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: DB_NAME
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: password
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+# Tweets Write Service
 apiVersion: v1
 kind: Service
 metadata:
-  name: tweets-service
+  name: tweets-write-service
   namespace: microblogging
   labels:
-    app: tweets-service
+    app: tweets-write-service
 spec:
   type: ClusterIP
   ports:
@@ -43,4 +137,21 @@ spec:
     targetPort: 8080
     name: http
   selector:
-    app: tweets-service
+    app: tweets-write-service
+---
+# Tweets Read Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: tweets-read-service
+  namespace: microblogging
+  labels:
+    app: tweets-read-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    name: http
+  selector:
+    app: tweets-read-service

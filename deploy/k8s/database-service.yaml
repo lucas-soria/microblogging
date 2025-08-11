@@ -1,70 +1,192 @@
-# PostgreSQL StatefulSet
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: database-config
+  namespace: microblogging
+data:
+  DB_NAME: "microblogging"
+  DB_HOST_WRITE: "postgres-primary"
+  DB_HOST_READ: "postgres-replica"
+  DB_PORT: "5432"
+  DB_SSL_MODE: "disable"
+  DB_MAX_OPEN_CONNS: "25"
+  DB_MAX_IDLE_CONNS: "25"
+  DB_CONN_MAX_LIFETIME: "5m"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: database-credentials
+  namespace: microblogging
+type: Opaque
+data:
+  username: cG9zdGdyZXM=                    # postgres
+  password: eW91ci1zZWN1cmUtcGFzc3dvcmQ=    # your-secure-password
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-replication-credentials
+  namespace: microblogging
+type: Opaque
+data:
+  replication_user: cmVwbF91c2Vy             # repl_user
+  replication_password: cmVwbF9wYXNzd29yZA== # repl_password
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: postgres
+  name: postgres-primary
   namespace: microblogging
 spec:
-  serviceName: postgres
+  serviceName: postgres-primary
   replicas: 1
   selector:
     matchLabels:
-      app: postgres
+      app: postgres-primary
   template:
     metadata:
       labels:
-        app: postgres
+        app: postgres-primary
     spec:
       containers:
-      - name: postgres
-        image: postgres:13-alpine
-        ports:
-        - containerPort: 5432
+        - name: postgres
+          image: postgres:16
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: database-config
+                  key: DB_NAME
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: database-credentials
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-credentials
+                  key: password
+            - name: POSTGRES_REPLICATION_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-replication-credentials
+                  key: replication_user
+            - name: POSTGRES_REPLICATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-replication-credentials
+                  key: replication_password
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
         resources:
           requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "200m"
-
-        env:
-        # TODO: Create configmap for environment variables
-        #- name: ENV_VAR
-        # valueFrom:
-        #   configMapKeyRef:
-        #     name: configmap-name
-        #     key: key-from-configmap
-        - name: POSTGRES_USER
-          value: postgres
-        # - name: POSTGRES_PASSWORD
-        #   value: postgres
-        - name: POSTGRES_DB
-          value: microblogging
-        volumeMounts:
-        - name: postgres-data
-          mountPath: /var/lib/postgresql/data
-  volumeClaimTemplates:
-  - metadata:
-      name: postgres-data
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 1Gi
+            storage: 5Gi
 ---
-# PostgreSQL Service
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres
+  name: postgres-primary
   namespace: microblogging
-  labels:
-    app: postgres
 spec:
-  ports:
-  - port: 5432
-    targetPort: 5432
-  selector:
-    app: postgres
   clusterIP: None
+  selector:
+    app: postgres-primary
+  ports:
+    - port: 5432
+      name: postgres
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-replica
+  namespace: microblogging
+spec:
+  serviceName: postgres-replica
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-replica
+  template:
+    metadata:
+      labels:
+        app: postgres-replica
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: database-config
+                  key: DB_NAME
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: database-credentials
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-credentials
+                  key: password
+            - name: POSTGRES_REPLICATION_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-replication-credentials
+                  key: replication_user
+            - name: POSTGRES_REPLICATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-replication-credentials
+                  key: replication_password
+            - name: POSTGRES_PRIMARY_HOST
+              value: postgres-primary
+          command:
+            - bash
+            - -c
+            - |
+              until pg_basebackup -h $POSTGRES_PRIMARY_HOST -D /var/lib/postgresql/data -U $POSTGRES_REPLICATION_USER -Fp -Xs -P -R; do
+                echo "Waiting for primary to be available..."
+                sleep 5
+              done
+              exec postgres
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-replica
+  namespace: microblogging
+spec:
+  clusterIP: None
+  selector:
+    app: postgres-replica
+  ports:
+    - port: 5432
+      name: postgres

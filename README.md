@@ -45,15 +45,39 @@ cp config/config.example.yaml config/config.yaml
 # Edit config/config.yaml with your settings
 ```
 
+TODO: Or just use config maps inside the deploy folder
+
+### 3. Set up help dependencies
+
+This is needed for the ingress to work (VirtualServer CRD)
+
+```bash
+minikube addons disable ingress
+
+brew install helm
+
+helm repo add nginx-stable https://helm.nginx.com/stable
+helm repo update
+
+helm install nginx-ingress nginx-stable/nginx-ingress --create-namespace -n nginx-ingress --set controller.enableCustomResources=true
+
+kubectl wait --namespace nginx-ingress \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/name=nginx-ingress \
+  --timeout=120s
+
+kubectl get crd | grep virtualserver
+```
+
 ### Alternative 1
 
-#### 3. Build services
+#### 4. Build services
 
 ```bash
 docker compose build
 ```
 
-#### 4. Publish services
+#### 5. Publish services
 
 ```bash
 minikube image load microblogging-users:latest
@@ -64,15 +88,28 @@ minikube image load microblogging-docsify:latest
 minikube image load microblogging-swagger-ui:latest
 ```
 
-#### 5. Deploy services
+#### 6. Deploy services
 
 ```bash
 kubectl apply -f k8s/
 ```
 
+### 7. Configure Local DNS
+
+To access the services via the `microblogging.local` domain, add the following entries to your `/etc/hosts` file:
+
+```bash
+# Get Minikube IP
+minikube ip
+# Add the IP to /etc/hosts
+sudo sh -c 'echo "$(minikube ip) microblogging.local" >> /etc/hosts'
+# Also add localhost for local development
+sudo sh -c 'echo "127.0.0.1 microblogging.local" >> /etc/hosts'
+```
+
 ### Alternative 2
 
-#### 3. Run deployment script
+#### 4. Run deployment script
 
 ```bash
 ./deploy/deploy.sh
@@ -86,6 +123,17 @@ kubectl apply -f k8s/
 │   ├── analytics/          # Analytics service
 │   ├── feed/               # Feed service
 │   ├── tweets/             # Tweets service
+│   └── users/              # Users service
+├── deploy/                 # Deployment scripts and Kubernetes manifests
+│   ├── k8s/                # Kubernetes manifests
+│   └── deploy.sh           # Deployment script
+├── docs/                   # Documentation
+│   ├── docsify/            # Docsify documentation
+│   └── swagger/            # Swagger documentation
+├── internal/               # Internal code
+│   ├── analytics/          # Analytics service
+│   ├── tweets/             # Tweets service
+│   ├── feed/               # Feed service
 │   └── users/              # Users service
 ├── pkg/                    # Library code
 │   ├── cache/              # Redis cache client

@@ -4,6 +4,8 @@ kind: Deployment
 metadata:
   name: analytics-service
   namespace: microblogging
+  labels:
+    app: analytics-service
 spec:
   replicas: 2
   selector:
@@ -20,6 +22,39 @@ spec:
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
+        env:
+        - name: GIN_MODE
+          value: "release"
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: DB_HOST_WRITE
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: DB_NAME
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: password
+        - name: DB_SSL_MODE
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: DB_SSL_MODE
         resources:
           requests:
             memory: "128Mi"
