@@ -19,24 +19,70 @@ echo "Deploying Kafka and Zookeeper..."
 kubectl apply -f $PROJECT_ROOT/k8s/queue-service.yaml
 
 echo "Waiting for infrastructure to be ready..."
-kubectl -n microblogging wait --for=condition=ready pod -l app=postgres --timeout=120s
+kubectl -n microblogging wait --for=condition=ready pod -l app=postgres-primary --timeout=120s
+kubectl -n microblogging wait --for=condition=ready pod -l app=postgres-replica --timeout=120s
 kubectl -n microblogging wait --for=condition=ready pod -l app=redis --timeout=120s
 kubectl -n microblogging wait --for=condition=ready pod -l app=zookeeper --timeout=120s
 kubectl -n microblogging wait --for=condition=ready pod -l app=kafka --timeout=120s
 
-echo "Building and pushing service images..."
-# docker compose build docsify
-# docker compose build users-service
-# docker compose build tweets-service
-# docker compose build feed-service
-# docker compose build analytics-service
+# Function to check if a service should be built
+should_build_service() {
+    local service=$1
+    # If --skip-build-and-publish is not specified, build all
+    if [[ ! " ${@:1} " =~ " --skip-build-and-publish " ]]; then
+        return 0  # build this service
+    fi
+    # If no services specified after --skip-build-and-publish, skip all
+    if [[ $# -le 1 || " ${@:1} " =~ " --skip-build-and-publish $ " ]]; then
+        return 1  # skip this service
+    fi
+    # Check if this service is in the skip list
+    if [[ " ${@:1} " =~ " --skip-build-and-publish " ]]; then
+        local skip_services="${@#*--skip-build-and-publish}"
+        if [[ " $skip_services " =~ " $service " ]]; then
+            return 1  # skip this service
+        fi
+    fi
+    return 0  # build this service
+}
 
-# Replace minikube with docker push when not using minikube
-# minikube image load microblogging-docsify:latest
-# minikube image load microblogging-users-service:latest
-# minikube image load microblogging-tweets-service:latest
-# minikube image load microblogging-feed-service:latest
-# minikube image load microblogging-analytics-service:latest
+# Build and push services if not skipped
+echo "Building and pushing service images..."
+
+if should_build_service "docsify" "$@"; then
+    docker compose build docsify --no-cache
+    minikube image load microblogging-docsify:latest
+else
+    echo "Skipping docsify build as requested..."
+fi
+
+if should_build_service "users-service" "$@"; then
+    docker compose build users-service --no-cache
+    minikube image load microblogging-users-service:latest
+else
+    echo "Skipping users-service build as requested..."
+fi
+
+if should_build_service "tweets-service" "$@"; then
+    docker compose build tweets-service --no-cache
+    minikube image load microblogging-tweets-service:latest
+else
+    echo "Skipping tweets-service build as requested..."
+fi
+
+if should_build_service "feed-service" "$@"; then
+    docker compose build feed-service --no-cache
+    minikube image load microblogging-feed-service:latest
+else
+    echo "Skipping feed-service build as requested..."
+fi
+
+if should_build_service "analytics-service" "$@"; then
+    docker compose build analytics-service --no-cache
+    minikube image load microblogging-analytics-service:latest
+else
+    echo "Skipping analytics-service build as requested..."
+fi
 
 echo "Deploying services..."
 kubectl apply -f $PROJECT_ROOT/k8s/feed-service.yaml
